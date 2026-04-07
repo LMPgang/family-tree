@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>族谱树 - 家族族谱网站</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tree-node {
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .tree-node:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tree-node .name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .tree-node .generation {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .tree-node .years {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .tree ul {
+            padding-top: 20px;
+            position: relative;
+            transition: all 0.5s;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tree li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 10px 0 10px;
+            transition: all 0.5s;
+        }
+
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 2px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid #ccc;
+        }
+
+        .tree li:only-child::after, .tree li:only-child::before {
+            display: none;
+        }
+
+        .tree li:only-child {
+            padding-top: 0;
+        }
+
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+
+        .tree li:last-child::before {
+            border-right: 2px solid #ccc;
+            border-radius: 0 5px 0 0;
+        }
+
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+
+        .tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 2px solid #ccc;
+            width: 0;
+            height: 20px;
+        }
+
+        .tree-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tree-controls button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .tree-controls button:hover {
+            background: #764ba2;
+        }
+
+        .generation-label {
+            background: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            padding: 10px 20px;
+            width: 300px;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-male {
+            background: #667eea;
+        }
+
+        .legend-female {
+            background: #e91e63;
+        }
+
+        @media (max-width: 768px) {
+            .tree-node {
+                min-width: 100px;
+                padding: 10px 15px;
+            }
+
+            .tree li {
+                padding: 15px 5px 0 5px;
+            }
+
+            .search-container input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">家族族谱</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="tree.html">族谱树</a></li>
+                <li><a href="members.html">家族成员</a></li>
+                <li><a href="about.html">关于我们</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="tree-section">
+            <div class="container">
+                <h2>家族族谱树</h2>
+
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="搜索成员姓名...">
+                    <button onclick="searchMember()">搜索</button>
+                </div>
+
+                <div class="tree-controls">
+                    <button onclick="expandAll()">展开全部</button>
+                    <button onclick="collapseAll()">收起全部</button>
+                    <button onclick="resetView()">重置视图</button>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-male"></div>
+                        <span>男性成员</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-female"></div>
+                        <span>女性成员</span>
+                    </div>
+                </div>
+
+                <div class="tree-container">
+                    <div class="tree" id="familyTree"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 家族族谱网站. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <!-- 成员详情弹窗 -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        // 构建族谱树
+        function buildTree(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return '';
+
+            const hasChildren = member.children && member.children.length > 0;
+            const genderClass = 'male'; // 可以根据实际数据添加性别判断
+
+            let html = `
+                <li>
+                    <div class="tree-node ${genderClass}" onclick="showMemberDetails(${member.id})">
+                        <div class="name">${member.name}</div>
+                        <div class="generation">第${member.generation}代</div>
+                        <div class="years">${member.birthYear} - ${member.deathYear || '至今'}</div>
+                    </div>
+            `;
+
+            if (hasChildren) {
+                html += '<ul>';
+                member.children.forEach(childId => {
+                    html += buildTree(childId);
+                });
+                html += '</ul>';
+            }
+
+            html += '</li>';
+            return html;
+        }
+
+        // 渲染族谱树
+        function renderTree() {
+            const treeContainer = document.getElementById('familyTree');
+            const rootMembers = familyData.members.filter(m => !m.parents || m.parents.length === 0);
+
+            let treeHTML = '<ul>';
+            rootMembers.forEach(member => {
+                treeHTML += buildTree(member.id);
+            });
+            treeHTML += '</ul>';
+
+            treeContainer.innerHTML = treeHTML;
+        }
+
+        // 显示成员详情
+        function showMemberDetails(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return;
+
+            const modal = document.getElementById('memberModal');
+            const modalContent = document.getElementById('modalContent');
+
+            let childrenNames = '';
+            if (member.children && member.children.length > 0) {
+                childrenNames = member.children.map(childId => {
+                    const child = familyData.members.find(m => m.id === childId);
+                    return child ? child.name : '';
+                }).filter(name => name).join('、');
+            }
+
+            modalContent.innerHTML = `
+                <h2 style="color: #667eea; margin-bottom: 20px;">${member.name}</h2>
+                <div style="line-height: 2;">
+                    <p><strong>世代：</strong>第${member.generation}代</p>
+                    <p><strong>生卒年：</strong>${member.birthYear} - ${member.deathYear || '至今'}</p>
+                    <p><strong>出生地：</strong>${member.birthPlace}</p>
+                    <p><strong>职业：</strong>${member.occupation}</p>
+                    ${member.spouse ? `<p><strong>配偶：</strong>${member.spouse}</p>` : ''}
+                    ${childrenNames ? `<p><strong>子女：</strong>${childrenNames}</p>` : ''}
+                    <p><strong>简介：</strong></p>
+                    <p style="margin-top: 10px;">${member.bio}</p>
+                    ${member.achievements && member.achievements.length > 0 ? `
+                        <p><strong>主要成就：</strong></p>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            ${member.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('memberModal').style.display = 'none';
+        }
+
+        // 点击弹窗外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('memberModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 搜索成员
+        function searchMember() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            if (!searchTerm) {
+                alert('请输入搜索关键词');
+                return;
+            }
+
+            const foundMembers = familyData.members.filter(member =>
+                member.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (foundMembers.length === 0) {
+                alert('未找到匹配的成员');
+                return;
+            }
+
+            if (foundMembers.length === 1) {
+                showMemberDetails(foundMembers[0].id);
+            } else {
+                const memberNames = foundMembers.map(m => m.name).join('、');
+                alert(`找到以下成员：${memberNames}`);
+            }
+        }
+
+        // 展开全部
+        function expandAll() {
+            const tree = document.querySelector('.tree');
+            const allUls = tree.querySelectorAll('ul');
+            allUls.forEach(ul => {
+                ul.style.display = 'flex';
+            });
+        }
+
+        // 收起全部
+        function collapseAll() {
+            const tree = document.querySelector('.tree');
+            const allUls = tree.querySelectorAll('ul ul');
+            allUls.forEach(ul => {
+                ul.style.display = 'none';
+            });
+        }
+
+        // 重置视图
+        function resetView() {
+            expandAll();
+            document.getElementById('searchInput').value = '';
+        }
+
+        // 页面加载完成后渲染族谱树
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTree();
+        });
+
+        // 回车键搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMember();
+            }
+        });
+    </script>
+</body>
+</html>

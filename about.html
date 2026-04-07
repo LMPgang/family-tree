@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我们 - 家族族谱网站</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .about-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .about-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: #667eea;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            width: 50%;
+            padding: 20px;
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            text-align: left;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            right: -10px;
+        }
+
+        .timeline-item:nth-child(even)::before {
+            left: -10px;
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-year {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .value-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .value-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .value-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .value-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .team-section {
+            background: #f8f9fa;
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .team-member {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-member-avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .contact-section {
+            background: white;
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .contact-item {
+            text-align: center;
+        }
+
+        .contact-item-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                padding-left: 50px;
+                text-align: left !important;
+            }
+
+            .timeline-item:nth-child(odd),
+            .timeline-item:nth-child(even) {
+                left: 0;
+            }
+
+            .timeline-item::before {
+                left: 10px !important;
+                right: auto !important;
+            }
+
+            .about-hero h1 {
+                font-size: 2rem;
+            }
+
+            .contact-info {
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">家族族谱</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="tree.html">族谱树</a></li>
+                <li><a href="members.html">家族成员</a></li>
+                <li><a href="about.html">关于我们</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="about-hero">
+            <h1>关于我们</h1>
+            <p>传承家族文化，记录家族历史</p>
+        </section>
+
+        <section class="about-section">
+            <div class="container">
+                <div class="about-content">
+                    <h2>家族历史</h2>
+                    <p>我们的家族起源于河南省，至今已有170多年的历史。从1850年创始人张德厚开始，家族历经六代人的传承与发展，形成了今天的规模。每一代人都秉承着"厚德载物，自强不息"的家训，在不同的领域为社会做出了贡献。</p>
+
+                    <h2>发展历程</h2>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">1850年</div>
+                                <p>家族创始人张德厚在河南开荒立业，奠定了家族基业</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">1880年</div>
+                                <p>第二代张文轩考取功名，成为当地教师，开始重视教育</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">1910年</div>
+                                <p>第三代开始多元化发展，涌现出医生、工程师、艺术家等人才</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">1940年</div>
+                                <p>第四代在全国各地发展，家族影响力不断扩大</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">1970年</div>
+                                <p>第五代在改革开放中抓住机遇，在各个领域取得突出成就</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-year">2005年</div>
+                                <p>第六代成长起来，家族传承进入新的时代</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>家族价值观</h2>
+
+                    <div class="values-grid">
+                        <div class="value-card">
+                            <div class="value-icon">📚</div>
+                            <h3>重视教育</h3>
+                            <p>知识改变命运，教育成就未来。家族历来重视教育，培养出众多人才</p>
+                        </div>
+
+                        <div class="value-card">
+                            <div class="value-icon">💪</div>
+                            <h3>自强不息</h3>
+                            <p>无论遇到什么困难，都要坚持不懈，努力奋斗</p>
+                        </div>
+
+                        <div class="value-card">
+                            <div class="value-icon">🤝</div>
+                            <h3>团结互助</h3>
+                            <p>家族成员之间相互支持，共同面对挑战，共享成功</p>
+                        </div>
+
+                        <div class="value-card">
+                            <div class="value-icon">❤️</div>
+                            <h3>厚德载物</h3>
+                            <p>以德立身，以诚待人，做一个有道德、有品格的人</p>
+                        </div>
+
+                        <div class="value-card">
+                            <div class="value-icon">🌱</div>
+                            <h3>创新发展</h3>
+                            <p>在传承传统的同时，勇于创新，与时俱进</p>
+                        </div>
+
+                        <div class="value-card">
+                            <div class="value-icon">🌍</div>
+                            <h3>回馈社会</h3>
+                            <p>不忘初心，回报社会，为社会发展贡献力量</p>
+                        </div>
+                    </div>
+
+                    <h2>家族成就</h2>
+                    <p>经过六代人的努力，我们的家族在各个领域都取得了显著成就：</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>教育领域：</strong>培养了多位教授、教师，教书育人，桃李满天下</li>
+                        <li><strong>医疗领域：</strong>涌现出众多医生、医学专家，救死扶伤，造福患者</li>
+                        <li><strong>工程技术：</strong>参与多项国家重大工程建设，为基础设施发展做出贡献</li>
+                        <li><strong>文化艺术：</strong>产生了多位知名艺术家、作家，传承和弘扬中华文化</li>
+                        <li><strong>商业企业：</strong>创立了多家成功企业，创造就业，促进经济发展</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="team-section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem;">网站维护团队</h2>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <div class="team-member-avatar">👨‍💻</div>
+                        <h3>技术负责人</h3>
+                        <p>负责网站技术架构和维护</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-avatar">📝</div>
+                        <h3>内容编辑</h3>
+                        <p>负责族谱内容整理和更新</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-avatar">🎨</div>
+                        <h3>设计师</h3>
+                        <p>负责网站视觉设计</p>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-member-avatar">📞</div>
+                        <h3>联络员</h3>
+                        <p>负责家族成员联络</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact-section">
+            <div class="container">
+                <h2 style="text-align: center;">联系我们</h2>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-item-icon">📧</div>
+                        <h3>电子邮件</h3>
+                        <p>family@example.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-item-icon">📱</div>
+                        <h3>联系电话</h3>
+                        <p>138-0000-0000</p>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-item-icon">📍</div>
+                        <h3>联系地址</h3>
+                        <p>河南省某市某区</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 家族族谱网站. 保留所有权利.</p>
+        </div>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem;">
+            本网站致力于记录和传承家族历史，让每一位家族成员都能了解自己的根源
+        </p>
+    </footer>
+</body>
+</html>
