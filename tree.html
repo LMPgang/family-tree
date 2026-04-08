@@ -6,200 +6,458 @@
     <title>族谱树 - 家族族谱网站</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        .tree-section {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.05) 0%, rgba(205, 133, 63, 0.05) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tree-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.03;
+            z-index: 0;
+        }
+
+        .tree-section > .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tree-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #4a3728;
+            font-family: 'KaiTi', 'SimSun', serif;
+            letter-spacing: 3px;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: rgba(255, 248, 220, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #DAA520;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-container input {
+            padding: 0.6rem 1rem;
+            width: 200px;
+            border: 2px solid #DAA520;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'KaiTi', 'SimSun', serif;
+            transition: all 0.3s;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #8B4513;
+            box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.2);
+        }
+
+        .btn-control {
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: #FFF8DC;
+            border: 1px solid #DAA520;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'KaiTi', 'SimSun', serif;
+            transition: all 0.3s;
+        }
+
+        .btn-control:hover {
+            background: linear-gradient(135deg, #A0522D 0%, #CD853F 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 族谱树容器 */
+        .tree-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #DAA520;
+            overflow: hidden;
+            height: 70vh;
+            min-height: 500px;
+        }
+
+        .tree-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .tree-container:active {
+            cursor: grabbing;
+        }
+
+        .tree-canvas {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+            min-width: 100%;
+            min-height: 100%;
+            padding: 50px;
+        }
+
+        /* 水平布局的族谱树 */
+        .tree-horizontal {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            padding: 30px;
+        }
+
+        .generation-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+            min-height: 80px;
+        }
+
+        .generation-label {
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: #FFF8DC;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: 'KaiTi', 'SimSun', serif;
+            border: 2px solid #DAA520;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        /* 族谱树节点样式 */
         .tree-node {
-            padding: 15px 20px;
-            background: white;
-            border: 2px solid #667eea;
+            padding: 10px 15px;
             border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            min-width: 120px;
+            min-width: 110px;
+            max-width: 140px;
             position: relative;
+            font-family: 'KaiTi', 'SimSun', serif;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid;
         }
 
         .tree-node:hover {
-            background: #667eea;
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .tree-node.highlighted {
+            animation: pulse 2s infinite;
+            z-index: 20;
+        }
+
+        .tree-node.dimmed {
+            opacity: 0.3;
+            filter: grayscale(50%);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 15px rgba(255, 68, 68, 0);
+            }
         }
 
         .tree-node .name {
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #4a3728;
         }
 
         .tree-node .generation {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin-top: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #2d1f14;
         }
 
         .tree-node .years {
-            font-size: 0.8em;
-            opacity: 0.7;
+            font-size: 0.75rem;
             margin-top: 3px;
+            white-space: nowrap;
+            color: #3d2914;
         }
 
-        .tree ul {
-            padding-top: 20px;
-            position: relative;
-            transition: all 0.5s;
-            display: flex;
-            justify-content: center;
+        /* 不同代的颜色方案 */
+        .gen-1 {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
+            border-color: #DAA520;
         }
 
-        .tree li {
-            float: left;
-            text-align: center;
-            list-style-type: none;
-            position: relative;
-            padding: 20px 10px 0 10px;
-            transition: all 0.5s;
+        .gen-2 {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-color: #4CAF50;
         }
 
-        .tree li::before, .tree li::after {
-            content: '';
+        .gen-3 {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border-color: #2196F3;
+        }
+
+        .gen-4 {
+            background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+            border-color: #9C27B0;
+        }
+
+        .gen-5 {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            border-color: #FF9800;
+        }
+
+        .gen-6 {
+            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+            border-color: #F44336;
+        }
+
+        /* 连接线 */
+        .connection-lines {
             position: absolute;
             top: 0;
-            right: 50%;
-            border-top: 2px solid #ccc;
-            width: 50%;
-            height: 20px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: visible !important;
         }
 
-        .tree li::after {
-            right: auto;
-            left: 50%;
-            border-left: 2px solid #ccc;
-        }
-
-        .tree li:only-child::after, .tree li:only-child::before {
-            display: none;
-        }
-
-        .tree li:only-child {
-            padding-top: 0;
-        }
-
-        .tree li:first-child::before, .tree li:last-child::after {
-            border: 0 none;
-        }
-
-        .tree li:last-child::before {
-            border-right: 2px solid #ccc;
-            border-radius: 0 5px 0 0;
-        }
-
-        .tree li:first-child::after {
-            border-radius: 5px 0 0 0;
-        }
-
-        .tree ul ul::before {
-            content: '';
+        .connection-line {
             position: absolute;
-            top: 0;
+            background: #DAA520;
+            opacity: 0.6;
+            transition: all 0.3s;
+            z-index: 5;
+            overflow: visible !important;
+        }
+
+        .connection-line.line-highlighted {
+            background: #FF4444 !important;
+            opacity: 1 !important;
+            box-shadow: 0 0 0 1px #FF4444, 0 0 10px rgba(255, 68, 68, 0.8) !important;
+            z-index: 100 !important;
+            transform: none !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+
+        .connection-line.line-dimmed {
+            opacity: 0.2 !important;
+        }
+
+        /* 悬停高亮按钮 */
+        .highlight-btn {
+            position: absolute;
+            top: -35px;
             left: 50%;
-            border-left: 2px solid #ccc;
-            width: 0;
-            height: 20px;
-        }
-
-        .tree-controls {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .tree-controls button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            background: #667eea;
+            transform: translateX(-50%);
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
             color: white;
-            border: none;
-            border-radius: 5px;
+            border: 2px solid #FF4444;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
+            font-size: 12px;
+            font-family: 'KaiTi', 'SimSun', serif;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .tree-controls button:hover {
-            background: #764ba2;
+        .tree-node:hover .highlight-btn {
+            opacity: 1;
+            visibility: visible;
+            top: -45px;
         }
 
-        .generation-label {
-            background: #f0f0f0;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin: 10px 0;
+        .highlight-btn:hover {
+            background: linear-gradient(135deg, #FF8E8E 0%, #FF6B6B 100%);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* 缩放控制 */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: #FFF8DC;
+            border: 2px solid #DAA520;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
             font-weight: bold;
-            color: #667eea;
-        }
-
-        .search-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .search-container input {
-            padding: 10px 20px;
-            width: 300px;
-            border: 2px solid #667eea;
-            border-radius: 25px;
-            font-size: 16px;
-        }
-
-        .search-container button {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-left: 10px;
-        }
-
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
+        .zoom-btn:hover {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #4a3728;
+            transform: scale(1.1);
         }
 
-        .legend-male {
-            background: #667eea;
+        .zoom-info {
+            position: absolute;
+            bottom: 130px;
+            left: 20px;
+            background: rgba(255, 248, 220, 0.95);
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            border: 2px solid #DAA520;
+            font-size: 14px;
+            color: #4a3728;
+            font-family: 'KaiTi', 'SimSun', serif;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .legend-female {
-            background: #e91e63;
+        /* 工具提示 */
+        .tooltip {
+            position: fixed;
+            background: rgba(74, 55, 40, 0.95);
+            color: #FFF8DC;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'KaiTi', 'SimSun', serif;
+            border: 2px solid #DAA520;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 250px;
         }
 
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .tree-node {
-                min-width: 100px;
-                padding: 10px 15px;
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
             }
 
-            .tree li {
-                padding: 15px 5px 0 5px;
+            .control-group {
+                justify-content: center;
             }
 
             .search-container input {
-                width: 200px;
+                width: 150px;
+            }
+
+            .tree-wrapper {
+                height: 60vh;
+                min-height: 400px;
+            }
+
+            .tree-node {
+                min-width: 90px;
+                max-width: 110px;
+                padding: 8px 10px;
+            }
+
+            .tree-node .name {
+                font-size: 0.9rem;
+            }
+
+            .tree-node .generation {
+                font-size: 0.7rem;
+            }
+
+            .tree-node .years {
+                font-size: 0.65rem;
+            }
+
+            .generation-row {
+                gap: 15px;
+            }
+
+            .generation-label {
+                left: -60px;
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .highlight-btn {
+                font-size: 10px;
+                padding: 4px 8px;
             }
         }
     </style>
@@ -222,30 +480,35 @@
             <div class="container">
                 <h2>家族族谱树</h2>
 
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="搜索成员姓名...">
-                    <button onclick="searchMember()">搜索</button>
-                </div>
-
-                <div class="tree-controls">
-                    <button onclick="expandAll()">展开全部</button>
-                    <button onclick="collapseAll()">收起全部</button>
-                    <button onclick="resetView()">重置视图</button>
-                </div>
-
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color legend-male"></div>
-                        <span>男性成员</span>
+                <div class="control-panel">
+                    <div class="control-group">
+                        <div class="search-container">
+                            <input type="text" id="searchInput" placeholder="搜索成员姓名...">
+                            <button class="btn-control" onclick="searchMember()">🔍</button>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-color legend-female"></div>
-                        <span>女性成员</span>
+
+                    <div class="control-group">
+                        <button class="btn-control" onclick="resetView()">重置视图</button>
+                        <button class="btn-control" onclick="centerTree()">居中显示</button>
+                        <button class="btn-control" onclick="clearHighlight()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); border-color: #FF4444;">取消高亮</button>
                     </div>
                 </div>
 
-                <div class="tree-container">
-                    <div class="tree" id="familyTree"></div>
+                <div class="tree-wrapper">
+                    <div class="tree-container" id="treeContainer">
+                        <div class="tree-canvas" id="treeCanvas">
+                            <div class="tree-horizontal" id="familyTree"></div>
+                        </div>
+                    </div>
+
+                    <div class="zoom-info" id="zoomInfo">缩放: 100%</div>
+
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="zoomIn()" title="放大">+</button>
+                        <button class="zoom-btn" onclick="zoomOut()" title="缩小">-</button>
+                        <button class="zoom-btn" onclick="resetZoom()" title="重置">⟲</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -265,49 +528,457 @@
         </div>
     </div>
 
+    <!-- 工具提示 -->
+    <div class="tooltip" id="tooltip"></div>
+
     <script src="data.js"></script>
     <script>
-        // 构建族谱树
-        function buildTree(memberId) {
-            const member = familyData.members.find(m => m.id === memberId);
-            if (!member) return '';
+        // 全局变量
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
 
-            const hasChildren = member.children && member.children.length > 0;
-            const genderClass = 'male'; // 可以根据实际数据添加性别判断
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTree();
+            initDragAndDrop();
+            initZoom();
+            initTooltip();
+        });
 
-            let html = `
-                <li>
-                    <div class="tree-node ${genderClass}" onclick="showMemberDetails(${member.id})">
-                        <div class="name">${member.name}</div>
-                        <div class="generation">第${member.generation}代</div>
-                        <div class="years">${member.birthYear} - ${member.deathYear || '至今'}</div>
-                    </div>
-            `;
-
-            if (hasChildren) {
-                html += '<ul>';
-                member.children.forEach(childId => {
-                    html += buildTree(childId);
-                });
-                html += '</ul>';
-            }
-
-            html += '</li>';
-            return html;
-        }
-
-        // 渲染族谱树
+        // 渲染族谱树 - 水平布局
         function renderTree() {
             const treeContainer = document.getElementById('familyTree');
-            const rootMembers = familyData.members.filter(m => !m.parents || m.parents.length === 0);
 
-            let treeHTML = '<ul>';
-            rootMembers.forEach(member => {
-                treeHTML += buildTree(member.id);
+            // 按世代分组
+            const generations = {};
+            familyData.members.forEach(member => {
+                if (!generations[member.generation]) {
+                    generations[member.generation] = [];
+                }
+                generations[member.generation].push(member);
             });
-            treeHTML += '</ul>';
+
+            // 按世代顺序渲染
+            const sortedGenerations = Object.keys(generations).sort((a, b) => a - b);
+            let treeHTML = '';
+
+            sortedGenerations.forEach(gen => {
+                const members = generations[gen];
+                const genClass = `gen-${Math.min(gen, 6)}`; // 最多6种颜色
+
+                // 按父亲分组，同一父亲的子女放在一起
+                const fatherGroups = {};
+                members.forEach(member => {
+                    const fatherId = member.father || 0;
+                    if (!fatherGroups[fatherId]) {
+                        fatherGroups[fatherId] = [];
+                    }
+                    fatherGroups[fatherId].push(member);
+                });
+
+                // 按父亲ID排序，确保顺序一致
+                const sortedFatherIds = Object.keys(fatherGroups).sort((a, b) => {
+                    if (a === 0) return -1; // 没有父亲的放前面
+                    if (b === 0) return 1;
+                    return a - b;
+                });
+
+                treeHTML += `
+                    <div class="generation-row" data-generation="${gen}">
+                        <div class="generation-label">第${gen}代</div>
+                `;
+
+                sortedFatherIds.forEach(fatherId => {
+                    const groupMembers = fatherGroups[fatherId];
+                    groupMembers.forEach(member => {
+                        treeHTML += `
+                            <div class="tree-node ${genClass}" onclick="showMemberDetails(${member.id})" data-member-id="${member.id}" data-generation="${gen}" data-father="${member.father || 0}">
+                                <button class="highlight-btn" onclick="event.stopPropagation(); highlightMember(${member.id});">高亮</button>
+                                <div class="name">${member.name}</div>
+                                <div class="generation">第${member.generation}代</div>
+                                <div class="years">${member.birthYear}-${member.deathYear || '至今'}</div>
+                            </div>
+                        `;
+                    });
+                });
+
+                treeHTML += '</div>';
+            });
 
             treeContainer.innerHTML = treeHTML;
+
+            // 绘制连接线
+            setTimeout(() => {
+                drawConnections();
+            }, 100);
+
+            // 居中显示
+            setTimeout(() => {
+                centerTree();
+            }, 200);
+        }
+
+        // 绘制连接线 - 从每个成员框底部中央伸出
+        function drawConnections() {
+            // 获取或创建连接线容器
+            const canvas = document.getElementById('treeCanvas');
+            let linesContainer = document.querySelector('.connection-lines');
+
+            // 如果容器不存在，创建它
+            if (!linesContainer) {
+                linesContainer = document.createElement('div');
+                linesContainer.className = 'connection-lines';
+                canvas.appendChild(linesContainer);
+            }
+
+            // 清除旧的连接线，但保留容器
+            linesContainer.innerHTML = '';
+
+            // 按父亲分组绘制连接线
+            const fatherGroups = {};
+            familyData.members.forEach(member => {
+                if (member.father) {
+                    if (!fatherGroups[member.father]) {
+                        fatherGroups[member.father] = [];
+                    }
+                    fatherGroups[member.father].push(member.id);
+                }
+            });
+
+            // 为每个父亲的子女排序
+            Object.keys(fatherGroups).forEach(fatherId => {
+                const children = fatherGroups[fatherId];
+                const childNodes = children.map(id => document.querySelector(`.tree-node[data-member-id="${id}"]`)).filter(node => node);
+
+                if (childNodes.length === 0) return;
+
+                // 按x坐标排序
+                childNodes.sort((a, b) => {
+                    const rectA = a.getBoundingClientRect();
+                    const rectB = b.getBoundingClientRect();
+                    return rectA.left - rectB.left;
+                });
+
+                // 获取父节点
+                const parentNode = document.querySelector(`.tree-node[data-member-id="${fatherId}"]`);
+                if (!parentNode) return;
+
+                const parentRect = parentNode.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+
+                const parentX = parentRect.left - canvasRect.left + parentRect.width / 2;
+                const parentY = parentRect.top - canvasRect.top + parentRect.height;
+
+                // 找到第一个和最后一个子节点
+                const firstChildNode = childNodes[0];
+                const lastChildNode = childNodes[childNodes.length - 1];
+
+                if (!firstChildNode || !lastChildNode) return;
+
+                const firstChildRect = firstChildNode.getBoundingClientRect();
+                const lastChildRect = lastChildNode.getBoundingClientRect();
+
+                const firstChildX = firstChildRect.left - canvasRect.left + firstChildRect.width / 2;
+                const lastChildX = lastChildRect.left - canvasRect.left + lastChildRect.width / 2;
+                const childY = firstChildRect.top - canvasRect.top;
+
+                // 连接线的起始位置（父节点底部下方15px）
+                const lineStartY = parentY + 15;
+
+                // 连接线的中间位置（垂直居中）
+                const midY = (lineStartY + childY) / 2;
+
+                // 1. 从父节点底部向下到中间位置的垂直线
+                const verticalLine1 = document.createElement('div');
+                verticalLine1.className = 'connection-line';
+                verticalLine1.style.left = `${parentX - 1}px`;
+                verticalLine1.style.top = `${lineStartY}px`;
+                verticalLine1.style.width = '2px';
+                verticalLine1.style.height = `${midY - lineStartY}px`;
+                verticalLine1.dataset.fatherId = fatherId;
+                linesContainer.appendChild(verticalLine1);
+
+                // 2. 水平线（从父节点x坐标到第一个子节点x坐标）
+                const horizontalLine1 = document.createElement('div');
+                horizontalLine1.className = 'connection-line';
+                horizontalLine1.style.left = `${Math.min(parentX, firstChildX)}px`;
+                horizontalLine1.style.top = `${midY - 1}px`;
+                horizontalLine1.style.width = `${Math.abs(firstChildX - parentX)}px`;
+                horizontalLine1.style.height = '2px';
+                horizontalLine1.dataset.fatherId = fatherId;
+                linesContainer.appendChild(horizontalLine1);
+
+                // 3. 水平线（从第一个子节点到最后一个子节点）
+                const horizontalLine2 = document.createElement('div');
+                horizontalLine2.className = 'connection-line';
+                horizontalLine2.style.left = `${Math.min(firstChildX, lastChildX)}px`;
+                horizontalLine2.style.top = `${midY - 1}px`;
+                horizontalLine2.style.width = `${Math.abs(lastChildX - firstChildX)}px`;
+                horizontalLine2.style.height = '2px';
+                horizontalLine2.dataset.fatherId = fatherId;
+                linesContainer.appendChild(horizontalLine2);
+
+                // 4. 为每个子节点绘制垂直线
+                childNodes.forEach(childNode => {
+                    const childRect = childNode.getBoundingClientRect();
+                    const childX = childRect.left - canvasRect.left + childRect.width / 2;
+
+                    const childVerticalLine = document.createElement('div');
+                    childVerticalLine.className = 'connection-line';
+                    childVerticalLine.style.left = `${childX - 1}px`;
+                    childVerticalLine.style.top = `${midY}px`;
+                    childVerticalLine.style.width = '2px';
+                    childVerticalLine.style.height = `${childY - midY}px`;
+                    childVerticalLine.dataset.fatherId = fatherId;
+                    linesContainer.appendChild(childVerticalLine);
+                });
+            });
+        }
+
+        // 初始化拖拽功能
+        function initDragAndDrop() {
+            const container = document.getElementById('treeContainer');
+
+            container.addEventListener('mousedown', startDrag);
+            container.addEventListener('mousemove', drag);
+            container.addEventListener('mouseup', endDrag);
+            container.addEventListener('mouseleave', endDrag);
+
+            container.addEventListener('touchstart', handleTouchStart, { passive: false });
+            container.addEventListener('touchmove', handleTouchMove, { passive: false });
+            container.addEventListener('touchend', endDrag);
+        }
+
+        function startDrag(e) {
+            if (e.target.closest('.tree-node') || e.target.closest('.highlight-btn')) return;
+
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            document.getElementById('treeContainer').style.cursor = 'grabbing';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            document.getElementById('treeContainer').style.cursor = 'grab';
+        }
+
+        function handleTouchStart(e) {
+            if (e.target.closest('.tree-node') || e.target.closest('.highlight-btn')) return;
+
+            isDragging = true;
+            const touch = e.touches[0];
+            startX = touch.clientX - translateX;
+            startY = touch.clientY - translateY;
+        }
+
+        function handleTouchMove(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+            const touch = e.touches[0];
+            translateX = touch.clientX - startX;
+            translateY = touch.clientY - startY;
+            updateTransform();
+        }
+
+        // 初始化缩放功能
+        function initZoom() {
+            const container = document.getElementById('treeContainer');
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newScale = Math.max(0.3, Math.min(2, scale + delta));
+
+                if (newScale !== scale) {
+                    scale = newScale;
+                    updateTransform();
+                    updateZoomInfo();
+                }
+            }, { passive: false });
+        }
+
+        function zoomIn() {
+            scale = Math.min(2, scale + 0.1);
+            updateTransform();
+            updateZoomInfo();
+        }
+
+        function zoomOut() {
+            scale = Math.max(0.3, scale - 0.1);
+            updateTransform();
+            updateZoomInfo();
+        }
+
+        function resetZoom() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            updateZoomInfo();
+        }
+
+        function updateTransform() {
+            const canvas = document.getElementById('treeCanvas');
+            canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        }
+
+        function updateZoomInfo() {
+            document.getElementById('zoomInfo').textContent = `缩放: ${Math.round(scale * 100)}%`;
+        }
+
+        function centerTree() {
+            const container = document.getElementById('treeContainer');
+            const canvas = document.getElementById('treeCanvas');
+            const tree = document.getElementById('familyTree');
+
+            const containerRect = container.getBoundingClientRect();
+            const treeRect = tree.getBoundingClientRect();
+
+            translateX = (containerRect.width - treeRect.width) / 2;
+            translateY = (containerRect.height - treeRect.height) / 2;
+            updateTransform();
+        }
+
+        function resetView() {
+            resetZoom();
+            centerTree();
+            clearHighlight();
+            document.getElementById('searchInput').value = '';
+        }
+
+        // 搜索成员
+        function searchMember() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            if (!searchTerm) {
+                alert('请输入搜索关键词');
+                return;
+            }
+
+            const foundMembers = familyData.members.filter(member =>
+                member.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (foundMembers.length === 0) {
+                alert('未找到匹配的成员');
+                return;
+            }
+
+            if (foundMembers.length === 1) {
+                highlightMember(foundMembers[0].id);
+            } else {
+                const memberNames = foundMembers.map(m => m.name).join('、');
+                alert(`找到以下成员：${memberNames}`);
+            }
+        }
+
+        // 高亮显示成员及其祖先（只高亮，不显示信息）
+        function highlightMember(memberId) {
+            // 先清除高亮，但不删除连接线
+            clearHighlight();
+
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return;
+
+            // 收集需要高亮的成员ID和父亲ID
+            const highlightedMembers = new Set();
+            const highlightedFathers = new Set();
+
+            // 向上高亮：高亮该成员及其所有祖先
+            const highlightAncestors = (id) => {
+                const node = document.querySelector(`.tree-node[data-member-id="${id}"]`);
+                if (node) {
+                    highlightedMembers.add(id);
+                }
+
+                const m = familyData.members.find(m => m.id === id);
+                if (m && m.father) {
+                    highlightedFathers.add(m.father);
+                    highlightAncestors(m.father);
+                }
+            };
+
+            highlightAncestors(memberId);
+
+            console.log('高亮成员:', highlightedMembers);
+            console.log('高亮父亲:', highlightedFathers);
+            console.log('连接线总数:', document.querySelectorAll('.connection-line').length);
+
+            // 高亮成员节点
+            highlightedMembers.forEach(id => {
+                const node = document.querySelector(`.tree-node[data-member-id="${id}"]`);
+                if (node) {
+                    node.classList.add('highlighted');
+                }
+            });
+
+            // 高亮连接线
+            highlightedFathers.forEach(fatherId => {
+                const lines = document.querySelectorAll(`.connection-line[data-father-id="${fatherId}"]`);
+                console.log(`父亲${fatherId}的连接线数量:`, lines.length);
+                lines.forEach(line => {
+                    line.classList.add('line-highlighted');
+                    console.log('高亮连接线:', line);
+                });
+            });
+
+            // 调暗其他节点
+            document.querySelectorAll('.tree-node').forEach(node => {
+                if (!highlightedMembers.has(parseInt(node.dataset.memberId))) {
+                    node.classList.add('dimmed');
+                }
+            });
+
+            // 调暗其他连接线
+            document.querySelectorAll('.connection-line').forEach(line => {
+                if (!line.classList.contains('line-highlighted')) {
+                    line.classList.add('line-dimmed');
+                }
+            });
+
+            // 滚动到该成员
+            setTimeout(() => {
+                const node = document.querySelector(`.tree-node[data-member-id="${memberId}"]`);
+                if (node) {
+                    const container = document.getElementById('treeContainer');
+                    const canvas = document.getElementById('treeCanvas');
+                    const nodeRect = node.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+
+                    translateX = containerRect.width / 2 - (nodeRect.left + nodeRect.width / 2 - canvasRect.left);
+                    translateY = containerRect.height / 2 - (nodeRect.top + nodeRect.height / 2 - canvasRect.top);
+                    updateTransform();
+                }
+            }, 100);
+        }
+
+        // 清除高亮
+        function clearHighlight() {
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('highlighted', 'dimmed');
+            });
+
+            document.querySelectorAll('.connection-line').forEach(line => {
+                line.classList.remove('line-highlighted', 'line-dimmed');
+            });
+
+            console.log('清除高亮后连接线数量:', document.querySelectorAll('.connection-line').length);
         }
 
         // 显示成员详情
@@ -326,14 +997,23 @@
                 }).filter(name => name).join('、');
             }
 
+            let fatherName = '';
+            if (member.father) {
+                const father = familyData.members.find(m => m.id === member.father);
+                if (father) {
+                    fatherName = father.name;
+                }
+            }
+
             modalContent.innerHTML = `
-                <h2 style="color: #667eea; margin-bottom: 20px;">${member.name}</h2>
-                <div style="line-height: 2;">
+                <h2 style="color: #8B4513; margin-bottom: 20px; font-family: 'KaiTi', 'SimSun', serif;">${member.name}</h2>
+                <div style="line-height: 2; font-family: 'KaiTi', 'SimSun', serif;">
                     <p><strong>世代：</strong>第${member.generation}代</p>
                     <p><strong>生卒年：</strong>${member.birthYear} - ${member.deathYear || '至今'}</p>
                     <p><strong>出生地：</strong>${member.birthPlace}</p>
                     <p><strong>职业：</strong>${member.occupation}</p>
                     ${member.spouse ? `<p><strong>配偶：</strong>${member.spouse}</p>` : ''}
+                    ${fatherName ? `<p><strong>父亲：</strong>${fatherName}</p>` : ''}
                     ${childrenNames ? `<p><strong>子女：</strong>${childrenNames}</p>` : ''}
                     <p><strong>简介：</strong></p>
                     <p style="margin-top: 10px;">${member.bio}</p>
@@ -362,67 +1042,52 @@
             }
         }
 
-        // 搜索成员
-        function searchMember() {
-            const searchInput = document.getElementById('searchInput');
-            const searchTerm = searchInput.value.trim().toLowerCase();
+        // 工具提示
+        function initTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            const nodes = document.querySelectorAll('.tree-node');
 
-            if (!searchTerm) {
-                alert('请输入搜索关键词');
-                return;
-            }
+            nodes.forEach(node => {
+                node.addEventListener('mouseenter', (e) => {
+                    const memberId = parseInt(node.dataset.memberId);
+                    const member = familyData.members.find(m => m.id === memberId);
 
-            const foundMembers = familyData.members.filter(member =>
-                member.name.toLowerCase().includes(searchTerm)
-            );
+                    if (member) {
+                        tooltip.innerHTML = `
+                            <strong>${member.name}</strong><br>
+                            第${member.generation}代<br>
+                            ${member.occupation}<br>
+                            ${member.birthYear}-${member.deathYear || '至今'}
+                        `;
+                        tooltip.style.left = `${e.pageX + 10}px`;
+                        tooltip.style.top = `${e.pageY + 10}px`;
+                        tooltip.classList.add('show');
+                    }
+                });
 
-            if (foundMembers.length === 0) {
-                alert('未找到匹配的成员');
-                return;
-            }
+                node.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                });
 
-            if (foundMembers.length === 1) {
-                showMemberDetails(foundMembers[0].id);
-            } else {
-                const memberNames = foundMembers.map(m => m.name).join('、');
-                alert(`找到以下成员：${memberNames}`);
-            }
-        }
-
-        // 展开全部
-        function expandAll() {
-            const tree = document.querySelector('.tree');
-            const allUls = tree.querySelectorAll('ul');
-            allUls.forEach(ul => {
-                ul.style.display = 'flex';
+                node.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('show');
+                });
             });
         }
-
-        // 收起全部
-        function collapseAll() {
-            const tree = document.querySelector('.tree');
-            const allUls = tree.querySelectorAll('ul ul');
-            allUls.forEach(ul => {
-                ul.style.display = 'none';
-            });
-        }
-
-        // 重置视图
-        function resetView() {
-            expandAll();
-            document.getElementById('searchInput').value = '';
-        }
-
-        // 页面加载完成后渲染族谱树
-        document.addEventListener('DOMContentLoaded', function() {
-            renderTree();
-        });
 
         // 回车键搜索
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchMember();
             }
+        });
+
+        // 窗口大小改变时重新绘制连接线
+        window.addEventListener('resize', () => {
+            setTimeout(() => {
+                drawConnections();
+            }, 100);
         });
     </script>
 </body>
