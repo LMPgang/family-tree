@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title>家族活动 - 家族族谱网站</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .activity-page { max-width: 1300px; margin: 0 auto; padding: 20px; }
+        .activity-page h1 { text-align: center; color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 2rem; margin-bottom: 8px; }
+        .activity-page .subtitle { text-align: center; color: #A0522D; font-size: 1rem; margin-bottom: 20px; }
+        .activity-layout { display: flex; gap: 16px; }
+        .activity-left { width: 200px; flex-shrink: 0; }
+        .activity-main { flex: 1; min-width: 0; }
+        .activity-right { width: 220px; flex-shrink: 0; }
+
+        .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+        .search-bar input { flex: 1; padding: 10px 14px; border: 2px solid #DAA520; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.8); outline: none; }
+        .search-bar input:focus { border-color: #8B4513; box-shadow: 0 0 6px rgba(139,69,19,0.2); }
+        .search-bar button { padding: 10px 18px; background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .search-bar button:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+
+        .filter-section { background: rgba(255,248,220,0.92); border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .filter-section h4 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; margin-bottom: 10px; font-size: 0.95rem; }
+        .filter-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-tag { padding: 5px 12px; border: 1.5px solid #DAA520; border-radius: 16px; font-size: 0.8rem; cursor: pointer; background: rgba(255,255,255,0.6); color: #8B4513; transition: all 0.2s; }
+        .filter-tag:hover { background: rgba(218,165,32,0.15); }
+        .filter-tag.active { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border-color: #8B4513; }
+
+        .notice-box { background: linear-gradient(135deg,rgba(139,69,19,0.08),rgba(218,165,32,0.08)); border: 2px solid #DAA520; border-radius: 12px; padding: 15px; }
+        .notice-box h3 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; margin-bottom: 10px; font-size: 1rem; }
+        .notice-item { padding: 8px; margin-bottom: 6px; background: rgba(255,255,255,0.7); border-radius: 6px; border-left: 3px solid #c0392b; position: relative; }
+        .notice-item .notice-date { color: #c0392b; font-size: 0.75rem; font-weight: bold; }
+        .notice-item .notice-title { color: #8B4513; font-weight: bold; font-size: 0.88rem; margin: 2px 0; }
+        .notice-item .notice-desc { color: #666; font-size: 0.78rem; }
+        .notice-item .notice-admin { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
+        .notice-item .notice-admin span { color: #c0392b; font-size: 0.7rem; cursor: pointer; }
+        .notice-item .notice-admin span:hover { text-decoration: underline; }
+
+        .timeline-container { position: relative; padding-left: 28px; }
+        .timeline-container::before { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: #DAA520; }
+        .activity-card { position: relative; margin-bottom: 22px; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .activity-card::before { content: ''; position: absolute; left: -22px; top: 18px; width: 12px; height: 12px; background: #8B4513; border: 3px solid #DAA520; border-radius: 50%; }
+        .activity-card .act-date { color: #A0522D; font-size: 0.82rem; margin-bottom: 5px; }
+        .activity-card .act-title { color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 1.15rem; margin-bottom: 6px; }
+        .activity-card .act-type { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; margin-bottom: 8px; }
+        .activity-card .act-type.wedding { background: linear-gradient(135deg,#c0392b,#e74c3c); color: white; }
+        .activity-card .act-type.festival { background: linear-gradient(135deg,#DAA520,#f1c40f); color: #8B4513; }
+        .activity-card .act-type.memorial { background: linear-gradient(135deg,#555,#777); color: white; }
+        .activity-card .act-type.travel { background: linear-gradient(135deg,#2980b9,#3498db); color: white; }
+        .activity-card .act-type.other { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; }
+        .activity-card .act-desc { color: #333; font-size: 0.88rem; line-height: 1.5; margin-bottom: 10px; }
+        .activity-card .act-photos { display: flex; gap: 8px; flex-wrap: wrap; }
+        .activity-card .act-photos img { width: 140px; height: 95px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s; }
+        .activity-card .act-photos img:hover { transform: scale(1.05); }
+        .activity-card .act-admin { margin-top: 8px; display: flex; gap: 10px; }
+        .activity-card .act-admin span { color: #c0392b; font-size: 0.75rem; cursor: pointer; }
+        .activity-card .act-admin span:hover { text-decoration: underline; }
+        .no-result { text-align: center; color: #A0522D; padding: 40px; font-size: 1rem; }
+
+        /* admin 发布按钮 */
+        .admin-bar { display: none; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .admin-bar.visible { display: flex; }
+        .admin-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; border: 1.5px solid rgba(139,69,19,0.2); }
+        .admin-btn.add-act { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; }
+        .admin-btn.add-act:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+        .admin-btn.add-notice { background: rgba(192,57,43,0.08); color: #c0392b; border-color: rgba(192,57,43,0.2); }
+        .admin-btn.add-notice:hover { background: rgba(192,57,43,0.15); }
+
+        /* 发布/编辑弹窗 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-overlay.visible { display: flex; }
+        .modal-box { background: rgba(255,250,235,0.98); border-radius: 16px; padding: 24px; max-width: 500px; width: 90vw; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-box h3 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 1.2rem; margin-bottom: 16px; }
+        .modal-field { margin-bottom: 12px; }
+        .modal-field label { display: block; color: #8B7355; font-size: 0.82rem; margin-bottom: 4px; }
+        .modal-field input, .modal-field textarea, .modal-field select { width: 100%; padding: 8px 12px; border: 1.5px solid #DAA520; border-radius: 6px; font-size: 0.88rem; background: rgba(255,255,255,0.8); outline: none; font-family: inherit; }
+        .modal-field input:focus, .modal-field textarea:focus, .modal-field select:focus { border-color: #8B4513; }
+        .modal-field textarea { resize: vertical; min-height: 60px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+        .modal-actions button { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+        .modal-actions .btn-save { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; }
+        .modal-actions .btn-cancel { background: rgba(0,0,0,0.05); color: #666; border: 1px solid #ccc; }
+
+        .img-preview { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; cursor: pointer; }
+        .img-preview.visible { display: flex; }
+        .img-preview img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+
+        
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">家族族谱</div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><span class="nav-icon">&#9750;</span><span class="nav-text">首页</span></a></li>
+                <li><a href="tree.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="8" x2="5" y2="14"/><line x1="12" y1="8" x2="19" y2="14"/><line x1="5" y1="14" x2="5" y2="20"/><line x1="19" y1="14" x2="19" y2="20"/><circle cx="5" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">族谱树</span></a></li>
+                <li><a href="members.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="nav-text">家族成员</span></a></li>
+                <li><a href="map.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor"/></svg></span><span class="nav-text">墓地地图</span></a></li>
+                <li><a href="activities.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg></span><span class="nav-text">家族活动</span></a></li>
+                <li><a href="houses.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-9"/><path d="M9 21h6"/></svg></span><span class="nav-text">老宅展示</span></a></li>
+                <li><a href="circle.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">家族圈</span></a></li>
+                <li><a href="about.html"><span class="nav-icon">&#9733;</span><span class="nav-text">关于我们</span></a></li>
+                <li id="navLoginItem"></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="activity-page">
+            <h1>家族活动</h1>
+            <p class="subtitle">记录家族重要时刻，传承美好回忆</p>
+
+            <div class="admin-bar" id="adminBar">
+                <button class="admin-btn add-act" onclick="openActModal()">&#10010; 发布活动</button>
+                <button class="admin-btn add-notice" onclick="openNoticeModal()">&#10010; 发布通知</button>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="actSearch" placeholder="搜索活动标题、描述..." oninput="renderActivities()">
+                <button onclick="renderActivities()">搜索</button>
+            </div>
+
+            <div class="activity-layout">
+                <div class="activity-left">
+                    <div class="filter-section">
+                        <h4>按类型筛选</h4>
+                        <div class="filter-tags" id="typeFilter"></div>
+                    </div>
+                    <div class="filter-section">
+                        <h4>按年份筛选</h4>
+                        <div class="filter-tags" id="yearFilter"></div>
+                    </div>
+                </div>
+                <div class="activity-main">
+                    <div class="timeline-container" id="activityTimeline"></div>
+                </div>
+                <div class="activity-right">
+                    <div class="notice-box">
+                        <h3>&#128276; 近期通知</h3>
+                        <div id="noticeList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 活动发布/编辑弹窗 -->
+    <div class="modal-overlay" id="actModal" onclick="if(event.target===this)this.classList.remove('visible')">
+        <div class="modal-box">
+            <h3 id="actModalTitle">发布活动</h3>
+            <div class="modal-field"><label>日期</label><input type="date" id="actDate"></div>
+            <div class="modal-field"><label>标题</label><input type="text" id="actTitle" placeholder="活动标题"></div>
+            <div class="modal-field"><label>类型</label><select id="actType"><option value="festival">节日活动</option><option value="wedding">婚礼</option><option value="memorial">祭祖</option><option value="travel">家族旅行</option><option value="other">其他</option></select></div>
+            <div class="modal-field"><label>描述</label><textarea id="actDesc" placeholder="活动描述..."></textarea></div>
+            <input type="hidden" id="actEditIndex" value="-1">
+            <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('actModal').classList.remove('visible')">取消</button><button class="btn-save" onclick="saveActivity()">保存</button></div>
+        </div>
+    </div>
+
+    <!-- 通知发布/编辑弹窗 -->
+    <div class="modal-overlay" id="noticeModal" onclick="if(event.target===this)this.classList.remove('visible')">
+        <div class="modal-box">
+            <h3 id="noticeModalTitle">发布通知</h3>
+            <div class="modal-field"><label>日期</label><input type="date" id="noticeDate"></div>
+            <div class="modal-field"><label>标题</label><input type="text" id="noticeTitle" placeholder="通知标题"></div>
+            <div class="modal-field"><label>描述</label><textarea id="noticeDesc" placeholder="通知内容..."></textarea></div>
+            <input type="hidden" id="noticeEditIndex" value="-1">
+            <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('noticeModal').classList.remove('visible')">取消</button><button class="btn-save" onclick="saveNotice()">保存</button></div>
+        </div>
+    </div>
+
+    <div class="img-preview" id="imgPreview" onclick="this.classList.remove('visible')"><img id="previewImg" src=""></div>
+    <footer><div class="container"><p>&copy; 2026 家族族谱网站. 保留所有权利.</p></div></footer>
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        const isAdmin = authSystem.isAdmin();
+
+        // 默认活动数据
+        const defaultActivities = [
+            { date: '2026-02-01', title: '春节家族团拜', type: 'festival', typeLabel: '节日活动', desc: '全族成员在老宅集合，举行春节团拜会。长辈发红包，晚辈拜年，共进团圆饭。', photos: ['https://images.unsplash.com/photo-1528360609-0a2-4f1c-a891-6a0e1e1e1e1e?w=400&q=80'] },
+            { date: '2025-10-06', title: '张志远与李婷婚礼', type: 'wedding', typeLabel: '婚礼', desc: '张志远与李婷在郑州举行婚礼，全族到场祝贺，场面温馨隆重。', photos: ['https://images.unsplash.com/photo-1519741497674-611481863552?w=400&q=80', 'https://images.unsplash.com/photo-1602664530865-32d0a42c0786?w=400&q=80'] },
+            { date: '2025-09-29', title: '中秋赏月聚会', type: 'festival', typeLabel: '节日活动', desc: '家族成员齐聚老宅院中赏月，品月饼，叙家常，共度中秋佳节。', photos: ['https://images.unsplash.com/photo-1530307484756-2e0a0418b4a1?w=400&q=80'] },
+            { date: '2025-04-05', title: '清明祭祖', type: 'memorial', typeLabel: '祭祖', desc: '全族前往祖茔祭扫，缅怀先祖，传承家风。', photos: ['https://images.unsplash.com/photo-1506901878852-8a9fda9f5f5f?w=400&q=80'] },
+            { date: '2025-02-10', title: '春节家族聚会', type: 'festival', typeLabel: '节日活动', desc: '蛇年春节，全族在洛阳老宅团聚，共度新春佳节。', photos: [] },
+            { date: '2024-10-01', title: '国庆家族旅行', type: 'travel', typeLabel: '家族旅行', desc: '家族组织前往西安旅行，参观兵马俑、大雁塔等历史名胜。', photos: ['https://images.unsplash.com/photo-1508804457051-3f3a8a9e6e6e?w=400&q=80'] },
+            { date: '2024-05-01', title: '张慧与王磊婚礼', type: 'wedding', typeLabel: '婚礼', desc: '张慧与王磊在开封举行婚礼，家族成员到场祝贺。', photos: ['https://images.unsplash.com/photo-1465499017031-4b89a0a6670f?w=400&q=80'] },
+            { date: '2024-04-04', title: '清明祭祖', type: 'memorial', typeLabel: '祭祖', desc: '清明节全族祭扫祖茔，敬献花篮，追思先人。', photos: [] },
+            { date: '2024-01-01', title: '元旦家族聚餐', type: 'other', typeLabel: '其他', desc: '元旦假期家族成员聚餐，迎接新年。', photos: [] },
+        ];
+
+        const defaultNotices = [
+            { date: '2026-04-30', title: '五一家族聚餐', desc: '5月1日中午12点，老宅集合，请各家准时参加。' },
+            { date: '2026-06-01', title: '端午包粽子活动', desc: '6月1日上午9点，老宅院内一起包粽子，欢迎带小朋友参加。' },
+            { date: '2026-10-06', title: '张浩与刘芳婚礼', desc: '10月6日郑州大酒店，请提前确认出席。' },
+        ];
+
+        // 从 localStorage 加载，如果没有则用默认
+        function getActivities() {
+            try { const d = JSON.parse(localStorage.getItem('familyActivities')); if (d && d.length) return d; } catch(e) {}
+            return [...defaultActivities];
+        }
+        function saveActivities(data) { localStorage.setItem('familyActivities', JSON.stringify(data)); }
+        function getNotices() {
+            try { const d = JSON.parse(localStorage.getItem('familyNotices')); if (d && d.length) return d; } catch(e) {}
+            return [...defaultNotices];
+        }
+        function saveNotices(data) { localStorage.setItem('familyNotices', JSON.stringify(data)); }
+
+        let activeType = 'all';
+        let activeYear = 'all';
+
+        // admin 工具栏
+        if (isAdmin) { document.getElementById('adminBar').classList.add('visible'); }
+
+        const typeLabelMap = { festival: '节日活动', wedding: '婚礼', memorial: '祭祖', travel: '家族旅行', other: '其他' };
+
+        function initFilters() {
+            const activities = getActivities();
+            const types = [
+                { key: 'all', label: '全部' },
+                { key: 'festival', label: '节日活动' },
+                { key: 'wedding', label: '婚礼' },
+                { key: 'memorial', label: '祭祖' },
+                { key: 'travel', label: '家族旅行' },
+                { key: 'other', label: '其他' },
+            ];
+            document.getElementById('typeFilter').innerHTML = types.map(t => `<span class="filter-tag ${t.key === activeType ? 'active' : ''}" onclick="setTypeFilter('${t.key}')">${t.label}</span>`).join('');
+
+            const years = new Set(activities.map(a => a.date.substring(0, 4)));
+            const yearList = ['all', ...Array.from(years).sort().reverse()];
+            document.getElementById('yearFilter').innerHTML = yearList.map(y => `<span class="filter-tag ${y === activeYear ? 'active' : ''}" onclick="setYearFilter('${y}')">${y === 'all' ? '全部' : y + '年'}</span>`).join('');
+        }
+
+        function setTypeFilter(type) { activeType = type; initFilters(); renderActivities(); }
+        function setYearFilter(year) { activeYear = year; initFilters(); renderActivities(); }
+
+        function renderActivities() {
+            const activities = getActivities();
+            const container = document.getElementById('activityTimeline');
+            const keyword = document.getElementById('actSearch').value.trim().toLowerCase();
+
+            let filtered = activities;
+            if (activeType !== 'all') filtered = filtered.filter(a => a.type === activeType);
+            if (activeYear !== 'all') filtered = filtered.filter(a => a.date.startsWith(activeYear));
+            if (keyword) filtered = filtered.filter(a => a.title.toLowerCase().includes(keyword) || a.desc.toLowerCase().includes(keyword));
+
+            if (filtered.length === 0) { container.innerHTML = '<div class="no-result">没有找到匹配的活动</div>'; return; }
+
+            container.innerHTML = '';
+            filtered.forEach(act => {
+                // 找到在原数组中的索引
+                const origIndex = activities.indexOf(act);
+                const card = document.createElement('div');
+                card.className = 'activity-card';
+                let photosHTML = '';
+                if (act.photos && act.photos.length > 0) {
+                    photosHTML = '<div class="act-photos">' + act.photos.map(p => `<img src="${p}" onclick="previewImage('${p}')" alt="活动照片">`).join('') + '</div>';
+                }
+                let adminHTML = '';
+                if (isAdmin) {
+                    adminHTML = `<div class="act-admin"><span onclick="editActivity(${origIndex})">编辑</span><span onclick="deleteActivity(${origIndex})">删除</span></div>`;
+                }
+                card.innerHTML = `
+                    <div class="act-date">${act.date}</div>
+                    <div class="act-title">${act.title}</div>
+                    <span class="act-type ${act.type}">${act.typeLabel || typeLabelMap[act.type] || act.type}</span>
+                    <div class="act-desc">${act.desc}</div>
+                    ${photosHTML}
+                    ${adminHTML}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderNotices() {
+            const notices = getNotices();
+            const container = document.getElementById('noticeList');
+            container.innerHTML = '';
+            notices.forEach((n, i) => {
+                const item = document.createElement('div');
+                item.className = 'notice-item';
+                let adminHTML = '';
+                if (isAdmin) {
+                    adminHTML = `<div class="notice-admin"><span onclick="editNotice(${i})">编辑</span><span onclick="deleteNotice(${i})">删除</span></div>`;
+                }
+                item.innerHTML = `<div class="notice-date">${n.date}</div><div class="notice-title">${n.title}</div><div class="notice-desc">${n.desc}</div>${adminHTML}`;
+                container.appendChild(item);
+            });
+        }
+
+        // admin 活动操作
+        function openActModal(editIndex) {
+            document.getElementById('actModalTitle').textContent = editIndex >= 0 ? '编辑活动' : '发布活动';
+            document.getElementById('actEditIndex').value = editIndex >= 0 ? editIndex : -1;
+            if (editIndex >= 0) {
+                const act = getActivities()[editIndex];
+                document.getElementById('actDate').value = act.date;
+                document.getElementById('actTitle').value = act.title;
+                document.getElementById('actType').value = act.type;
+                document.getElementById('actDesc').value = act.desc;
+            } else {
+                document.getElementById('actDate').value = '';
+                document.getElementById('actTitle').value = '';
+                document.getElementById('actType').value = 'festival';
+                document.getElementById('actDesc').value = '';
+            }
+            document.getElementById('actModal').classList.add('visible');
+        }
+
+        function saveActivity() {
+            const date = document.getElementById('actDate').value;
+            const title = document.getElementById('actTitle').value.trim();
+            const type = document.getElementById('actType').value;
+            const desc = document.getElementById('actDesc').value.trim();
+            if (!date || !title) { alert('请填写日期和标题'); return; }
+            const editIndex = parseInt(document.getElementById('actEditIndex').value);
+            const activities = getActivities();
+            const newAct = { date, title, type, typeLabel: typeLabelMap[type] || type, desc, photos: [] };
+            if (editIndex >= 0) { activities[editIndex] = newAct; }
+            else { activities.unshift(newAct); }
+            saveActivities(activities);
+            document.getElementById('actModal').classList.remove('visible');
+            initFilters();
+            renderActivities();
+        }
+
+        function editActivity(index) { openActModal(index); }
+        function deleteActivity(index) {
+            if (!confirm('确定删除此活动？')) return;
+            const activities = getActivities();
+            activities.splice(index, 1);
+            saveActivities(activities);
+            initFilters();
+            renderActivities();
+        }
+
+        // admin 通知操作
+        function openNoticeModal(editIndex) {
+            document.getElementById('noticeModalTitle').textContent = editIndex >= 0 ? '编辑通知' : '发布通知';
+            document.getElementById('noticeEditIndex').value = editIndex >= 0 ? editIndex : -1;
+            if (editIndex >= 0) {
+                const n = getNotices()[editIndex];
+                document.getElementById('noticeDate').value = n.date;
+                document.getElementById('noticeTitle').value = n.title;
+                document.getElementById('noticeDesc').value = n.desc;
+            } else {
+                document.getElementById('noticeDate').value = '';
+                document.getElementById('noticeTitle').value = '';
+                document.getElementById('noticeDesc').value = '';
+            }
+            document.getElementById('noticeModal').classList.add('visible');
+        }
+
+        function saveNotice() {
+            const date = document.getElementById('noticeDate').value;
+            const title = document.getElementById('noticeTitle').value.trim();
+            const desc = document.getElementById('noticeDesc').value.trim();
+            if (!date || !title) { alert('请填写日期和标题'); return; }
+            const editIndex = parseInt(document.getElementById('noticeEditIndex').value);
+            const notices = getNotices();
+            if (editIndex >= 0) { notices[editIndex] = { date, title, desc }; }
+            else { notices.unshift({ date, title, desc }); }
+            saveNotices(notices);
+            document.getElementById('noticeModal').classList.remove('visible');
+            renderNotices();
+        }
+
+        function editNotice(index) { openNoticeModal(index); }
+        function deleteNotice(index) {
+            if (!confirm('确定删除此通知？')) return;
+            const notices = getNotices();
+            notices.splice(index, 1);
+            saveNotices(notices);
+            renderNotices();
+        }
+
+        function previewImage(src) {
+            document.getElementById('previewImg').src = src;
+            document.getElementById('imgPreview').classList.add('visible');
+        }
+
+        initFilters();
+        renderActivities();
+        renderNotices();
+    </script>
+
+    <script>
+    // 强制横屏：竖屏时显示提示遮罩
+    (function() {
+        var style = document.createElement('style');
+        style.textContent = '@media screen and (orientation: portrait) { #landscapeOverlay { display: flex !important; } } #landscapeOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74,55,40,0.97); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; } #landscapeOverlay .rotate-icon { font-size: 4rem; animation: rotateHint 2s ease-in-out infinite; margin-bottom: 20px; } @keyframes rotateHint { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } } #landscapeOverlay .hint-text { color: #FFF8DC; font-size: 1.3rem; font-family: KaiTi,SimSun,serif; letter-spacing: 3px; }';
+        document.head.appendChild(style);
+        var overlay = document.createElement('div');
+        overlay.id = 'landscapeOverlay';
+        overlay.innerHTML = '<div class="rotate-icon">&#128241;</div><div class="hint-text">请横屏查看以获得最佳体验</div>';
+        document.body.appendChild(overlay);
+    })();
+    </script>
+</body>
+</html>

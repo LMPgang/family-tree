@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title>家族圈 - 家族族谱网站</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .circle-page { max-width: 1040px; margin: 0 auto; padding: 20px; }
+        .circle-page h1 { text-align: center; color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 2rem; margin-bottom: 8px; }
+        .circle-page .subtitle { text-align: center; color: #A0522D; font-size: 1rem; margin-bottom: 25px; }
+
+        /* 发布区 */
+        .composer-card { background: rgba(255,250,235,0.97); border-radius: 14px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .composer-top { display: flex; gap: 12px; align-items: flex-start; }
+        .composer-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#A0522D,#CD853F); display: flex; align-items: center; justify-content: center; color: #FFF8DC; font-size: 1.1rem; flex-shrink: 0; overflow: hidden; border: 2px solid #DAA520; }
+        .composer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .composer-input { flex: 1; }
+        .composer-input textarea { width: 100%; padding: 10px 14px; border: 1.5px solid rgba(218,165,32,0.25); border-radius: 10px; font-size: 0.88rem; background: rgba(255,255,255,0.7); outline: none; resize: vertical; min-height: 60px; font-family: inherit; }
+        .composer-input textarea:focus { border-color: #8B4513; }
+        .composer-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-left: 54px; }
+        .composer-img-preview { display: flex; gap: 6px; flex-wrap: wrap; }
+        .composer-img-preview img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; cursor: pointer; }
+        .composer-actions { display: flex; gap: 8px; align-items: center; }
+        .composer-attach { padding: 6px 12px; background: rgba(139,69,19,0.05); border: 1px solid rgba(218,165,32,0.25); border-radius: 6px; cursor: pointer; font-size: 0.8rem; color: #8B4513; }
+        .composer-attach:hover { background: rgba(139,69,19,0.1); }
+        .composer-emoji { padding: 6px 12px; background: rgba(139,69,19,0.05); border: 1px solid rgba(218,165,32,0.25); border-radius: 6px; cursor: pointer; font-size: 0.8rem; color: #8B4513; position: relative; }
+        .composer-emoji:hover { background: rgba(139,69,19,0.1); }
+        .emoji-picker { display: none; position: absolute; bottom: 36px; left: 0; background: rgba(255,250,235,0.98); border: 1px solid rgba(218,165,32,0.3); border-radius: 10px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 100; width: 380px; max-height: 300px; overflow-y: auto; }
+        .emoji-picker.open { display: block; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+        .emoji-grid span { font-size: 1.2rem; cursor: pointer; text-align: center; padding: 3px; border-radius: 4px; transition: background 0.2s; }
+        .emoji-grid span:hover { background: rgba(218,165,32,0.2); }
+        .composer-submit { padding: 7px 22px; background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+        .composer-submit:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+
+        /* 动态流 */
+        .feed-item { background: rgba(255,250,235,0.95); border-radius: 14px; padding: 18px; margin-bottom: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
+        .feed-header { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+        .feed-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#A0522D,#CD853F); display: flex; align-items: center; justify-content: center; color: #FFF8DC; font-size: 1rem; flex-shrink: 0; overflow: hidden; border: 2px solid #DAA520; }
+        .feed-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .feed-user-info { flex: 1; }
+        .feed-username { color: #3E2723; font-weight: bold; font-size: 0.92rem; }
+        .feed-time { color: #A0522D; font-size: 0.72rem; margin-top: 2px; }
+        .feed-content { color: #3E2723; font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; white-space: pre-wrap; }
+
+        /* 微信朋友圈风格图片网格 */
+        .feed-img-grid { display: grid; gap: 4px; margin-bottom: 10px; }
+        .feed-img-grid.g1 { grid-template-columns: 1fr; max-width: 65%; }
+        .feed-img-grid.g2 { grid-template-columns: 1fr 1fr; }
+        .feed-img-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+        .feed-img-grid.g4 { grid-template-columns: 1fr 1fr; }
+        .feed-img-grid.g5, .feed-img-grid.g6 { grid-template-columns: 1fr 1fr 1fr; }
+        .feed-img-grid.g7, .feed-img-grid.g8, .feed-img-grid.g9 { grid-template-columns: 1fr 1fr 1fr; }
+        .feed-img-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; transition: opacity 0.2s; }
+        .feed-img-grid img:hover { opacity: 0.85; }
+        .feed-img-grid.g1 img { aspect-ratio: auto; max-height: 280px; border-radius: 6px; }
+
+        /* 操作栏 */
+        .feed-actions { display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid rgba(218,165,32,0.12); }
+        .feed-action-btn { color: #8B7355; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
+        .feed-action-btn:hover { color: #8B4513; }
+        .feed-action-btn.liked { color: #c0392b; }
+        .feed-admin-btn { color: #c0392b; font-size: 0.75rem; cursor: pointer; margin-left: auto; }
+        .feed-admin-btn:hover { text-decoration: underline; }
+
+        /* 评论区 */
+        .comments-section { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(218,165,32,0.08); }
+        .comment-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+        .comment-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#A0522D,#CD853F); display: flex; align-items: center; justify-content: center; color: #FFF8DC; font-size: 0.6rem; flex-shrink: 0; overflow: hidden; border: 1px solid #DAA520; }
+        .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .comment-body { flex: 1; }
+        .comment-user { color: #3E2723; font-size: 0.78rem; font-weight: bold; }
+        .comment-text { color: #555; font-size: 0.78rem; line-height: 1.4; }
+        .comment-time { color: #A0522D; font-size: 0.65rem; margin-top: 1px; }
+        .comment-input-row { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+        .comment-input-row input { flex: 1; padding: 6px 10px; border: 1px solid rgba(218,165,32,0.25); border-radius: 6px; font-size: 0.78rem; background: rgba(255,255,255,0.7); outline: none; }
+        .comment-input-row input:focus { border-color: #8B4513; }
+        .comment-input-row button { padding: 5px 12px; background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+        .comment-emoji-btn { font-size: 0.85rem; cursor: pointer; padding: 3px; }
+        .comment-emoji-picker { display: none; position: absolute; bottom: 34px; left: 0; background: rgba(255,250,235,0.98); border: 1px solid rgba(218,165,32,0.3); border-radius: 8px; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 100; width: 340px; max-height: 200px; overflow-y: auto; }
+        .comment-emoji-picker.open { display: block; }
+
+        .no-feed { text-align: center; color: #A0522D; padding: 40px; font-size: 0.95rem; }
+
+        /* 全屏图片预览（微信风格） */
+        .img-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        .img-viewer.visible { display: flex; }
+        .img-viewer-top { position: absolute; top: 0; left: 0; right: 0; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+        .img-viewer-close { color: #fff; font-size: 1.5rem; cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.15); }
+        .img-viewer-close:hover { background: rgba(255,255,255,0.3); }
+        .img-viewer-counter { color: rgba(255,255,255,0.8); font-size: 0.85rem; }
+        .img-viewer-main { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .img-viewer-main img { max-width: 92vw; max-height: 85vh; object-fit: contain; }
+        .img-viewer-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; z-index: 2; transition: background 0.2s; }
+        .img-viewer-arrow:hover { background: rgba(255,255,255,0.3); }
+        .img-viewer-arrow.left { left: 10px; }
+        .img-viewer-arrow.right { right: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">家族族谱</div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><span class="nav-icon">&#9750;</span><span class="nav-text">首页</span></a></li>
+                <li><a href="tree.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="8" x2="5" y2="14"/><line x1="12" y1="8" x2="19" y2="14"/><line x1="5" y1="14" x2="5" y2="20"/><line x1="19" y1="14" x2="19" y2="20"/><circle cx="5" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">族谱树</span></a></li>
+                <li><a href="members.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="nav-text">家族成员</span></a></li>
+                <li><a href="map.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor"/></svg></span><span class="nav-text">墓地地图</span></a></li>
+                <li><a href="activities.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg></span><span class="nav-text">家族活动</span></a></li>
+                <li><a href="houses.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-9"/><path d="M9 21h6"/></svg></span><span class="nav-text">老宅展示</span></a></li>
+                <li><a href="circle.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">家族圈</span></a></li>
+                <li><a href="about.html"><span class="nav-icon">&#9733;</span><span class="nav-text">关于我们</span></a></li>
+                <li id="navLoginItem"></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="circle-page">
+            <h1>家族圈</h1>
+            <p class="subtitle">分享生活点滴，连接家族温情</p>
+
+            <div class="composer-card" id="composerCard" style="display:none">
+                <div class="composer-top">
+                    <div class="composer-avatar" id="composerAvatar"></div>
+                    <div class="composer-input">
+                        <textarea id="circleInput" placeholder="分享你的生活..."></textarea>
+                    </div>
+                </div>
+                <div class="composer-bottom">
+                    <div class="composer-img-preview" id="composerImgPreview"></div>
+                    <div class="composer-actions">
+                        <button class="composer-attach" onclick="document.getElementById('circleImgInput').click()">&#128247; 图片</button>
+                        <input type="file" id="circleImgInput" accept="image/*" multiple style="display:none" onchange="addCircleImages(event)">
+                        <div class="composer-emoji" onclick="toggleEmojiPicker()">&#128522; 表情
+                            <div class="emoji-picker" id="emojiPicker" onclick="event.stopPropagation()"></div>
+                        </div>
+                        <button class="composer-submit" onclick="publishCircle()">发布</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="circle-feed" id="circleFeed"></div>
+        </div>
+    </main>
+
+    <!-- 全屏图片查看器 -->
+    <div class="img-viewer" id="imgViewer">
+        <div class="img-viewer-top">
+            <div class="img-viewer-close" onclick="closeViewer()">&times;</div>
+            <div class="img-viewer-counter" id="viewerCounter"></div>
+        </div>
+        <div class="img-viewer-main">
+            <button class="img-viewer-arrow left" id="viewerLeft" onclick="viewerSlide(-1)">&#9664;</button>
+            <img id="viewerImg" src="">
+            <button class="img-viewer-arrow right" id="viewerRight" onclick="viewerSlide(1)">&#9654;</button>
+        </div>
+    </div>
+
+    <footer><div class="container"><p>&copy; 2026 家族族谱网站. 保留所有权利.</p></div></footer>
+    <script src="data.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        let pendingImages = [];
+        const isLoggedIn = authSystem.isLoggedIn();
+        const currentUser = isLoggedIn ? authSystem.getCurrentUser() : '';
+        const isAdmin = isLoggedIn && currentUser === 'admin';
+
+        // 压缩图片
+        function compressImage(dataUrl, maxW, maxH, quality) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = h * maxW / w; w = maxW; }
+                    if (h > maxH) { w = w * maxH / h; h = maxH; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality || 0.7));
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        }
+
+        // 常用表情列表
+        const emojiList = [
+            // 笑脸
+            '😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲',
+            // 情绪
+            '😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','🫥','😏','😒','🙄','😬','🤥',
+            // 悲伤/生气
+            '😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐',
+            '😕','😟','🙁','😮','😯','😲','😳','🥺','🥹','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️',
+            // 手势
+            '👋','🤚','🖐️','✋','🖖','🫱','🫲','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵',
+            '👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🙏','✍️','💅','🤳','💪','🦾','🦿','🧳',
+            // 爱心
+            '❤️','🧡','💛','💚','💙','💜','🤎','🖤','🤍','🩷','🩵','🩶','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
+            // 庆祝/符号
+            '🔥','⭐','🌟','✨','💫','🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','🏅','🎖️','💡','💎','🔔','📣','📢','🎵','🎶','🎼','🎯','🚀','✅','❌','⚠️','💯','🔱','💫',
+            // 食物
+            '🍚','🍜','🥟','🥮','🥡','🥢','🍲','🥘','🥙','🧆','🧇','🧈','🥞','🧇','🍖','🍗','🥩','🥓','🥓','🍔','🍟','🍕','🌭','🥪','🌮','🌯','🥗','🥘',
+            '🧀','🥚','🍳','🥞','🧇','🥓','🥫','🍿','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡',
+            '🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍩','🍪','🥛','🍼','☕','🫖','🍵','🍶','🍷','🍸','🍹','🍺','🍻','🥂','🥃','🥤','🧋','🧉','🧊',
+            // 建筑/传统
+            '🏠','🏡','🏢','🏣','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩️','🕋',
+            '🏮','🏮','🧧','🎊','🎉','🧨','🪔','🎐','🎑','🧿','🪬','🪷','🪻','🪹','🪺',
+            // 人物/家庭
+            '👨‍👩‍👦','👨‍👩‍👧','👨‍👩‍👧‍👦','👨‍👩‍👦‍👦','👨‍👩‍👧‍👧','👨‍👦','👨‍👧','👨‍👧‍👦','👨‍👦‍👦','👨‍👧‍👧',
+            '👩‍👦','👩‍👧','👩‍👧‍👦','👩‍👦‍👦','👩‍👧‍👧','👴','👵','🧓','🧔','👨‍🦳','👩‍🦳','👨‍🦰','👩‍🦰',
+            // 动物/自然
+            '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦅','🦉','🦇',
+            '🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🪰','🪲','🪳','🦟','🦗','🕷️','🦂','🦀','🦞','🦐','🦑','🦪',
+            '🌸','🌺','🌻','🌹','🌷','🌱','🌲','🌳','🌴','🌵','🍀','🍁','🍂','🍃','🍄','🌾','🌿','☘️','🪴','🪵',
+            // 交通
+            '🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🛵','🏍️','🚲','🛴','🛺',
+            '✈️','🛩️','🛫','🛬','🪿','🚀','🛸','🚁','🛶','🛥️','🚢','⛵','🛳️','🛴',
+            // 日常物品
+            '📱','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💾','💿','📀','📷','📹','🎥','📽️','📺','📻','🎙️','🎚️','🎛️','🧭',
+            '⌚','⏰','⏱️','⏲️','🕰️','💡','🔦','🕯️','🪔','📔','📕','📖','📗','📘','📙','📚','📝','✏️','🖊️','🖋️','🖍️','📌',
+            '🔑','🗝️','🔒','🔓','🛡️','🔧','🔨','⚒️','🛠️','⛏️','🪓','🔩','⚙️','🧲','🪜','🧰','🧲',
+            '💰','🪙','💴','💵','💶','💷','💳','🧾','💹','✉️','📧','📨','📩','📤','📥','📦','🏷️','🪧','📪','📫','📬','📭','📮','📯',
+            '🧹','🧺','🧻','🪣','🧼','🪥','🧽','🧴','🛒','🚿','🛁','🪤','🪒','🧷','🧹','🪕','🪖','🪗','🪘',
+            // 天气/自然
+            '☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','🌪️','🌫️','🌊','💧','💦','🫧',
+            '🌈','🌙','🌚','🌛','🌜','🌡️','🌅','🌄','🌇',' dusk','🌃','🏙️','🌌','🌉','🌁'
+        ];
+
+        function initEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            if (!picker) return;
+            let html = '<div class="emoji-grid">';
+            emojiList.forEach(e => { html += `<span onclick="insertEmoji('${e}')">${e}</span>`; });
+            html += '</div>';
+            picker.innerHTML = html;
+        }
+
+        function toggleEmojiPicker() { document.getElementById('emojiPicker').classList.toggle('open'); }
+        function insertEmoji(emoji) { const input = document.getElementById('circleInput'); input.value += emoji; input.focus(); document.getElementById('emojiPicker').classList.remove('open'); }
+        document.addEventListener('click', (e) => { const picker = document.getElementById('emojiPicker'); if (picker && !e.target.closest('.composer-emoji')) picker.classList.remove('open'); });
+
+        // 初始化发布区
+        if (isLoggedIn) {
+            document.getElementById('composerCard').style.display = 'block';
+            const avatarEl = document.getElementById('composerAvatar');
+            try {
+                const avatarSrc = authSystem.getUserAvatar(currentUser);
+                if (avatarSrc) { avatarEl.innerHTML = `<img src="${avatarSrc}" alt="">`; }
+                else { avatarEl.textContent = currentUser.charAt(0); }
+            } catch(e) { avatarEl.textContent = currentUser.charAt(0); }
+            initEmojiPicker();
+        }
+
+        function getUserAvatar(user) {
+            const avatarSrc = authSystem.getUserAvatar(user);
+            if (avatarSrc) return `<img src="${avatarSrc}" alt="">`;
+            return user.charAt(0);
+        }
+
+        function addCircleImages(e) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = async ev => { const compressed = await compressImage(ev.target.result, 800, 600, 0.6); pendingImages.push(compressed); renderPendingImgs(); };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        function renderPendingImgs() {
+            document.getElementById('composerImgPreview').innerHTML = pendingImages.map((src, i) => `<img src="${src}" onclick="pendingImages.splice(${i},1);renderPendingImgs()">`).join('');
+        }
+
+        function publishCircle() {
+            const input = document.getElementById('circleInput');
+            const content = input.value.trim();
+            if (!content && pendingImages.length === 0) return;
+            const newPost = { user: currentUser, time: new Date().toLocaleString('zh-CN'), content, images: [...pendingImages], likes: 0, likedBy: [], comments: [] };
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { circlePosts = []; }
+            circlePosts.unshift(newPost);
+            try { localStorage.setItem('familyCircle', JSON.stringify(circlePosts)); } catch(e) { alert('存储空间不足，请减少图片数量'); return; }
+            let myPosts = [];
+            try { myPosts = JSON.parse(localStorage.getItem('familyPosts_' + currentUser) || '[]'); } catch(e) { myPosts = []; }
+            myPosts.unshift({...newPost});
+            try { localStorage.setItem('familyPosts_' + currentUser, JSON.stringify(myPosts)); } catch(e) {}
+            input.value = ''; pendingImages = []; renderPendingImgs(); renderFeed();
+        }
+
+        function toggleLike(index) {
+            if (!isLoggedIn) return;
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { return; }
+            if (!circlePosts[index]) return;
+            if (!circlePosts[index].likedBy) { circlePosts[index].likedBy = []; circlePosts[index].likes = 0; }
+            const li = circlePosts[index].likedBy.indexOf(currentUser);
+            if (li >= 0) { circlePosts[index].likedBy.splice(li, 1); circlePosts[index].likes = Math.max(0, (circlePosts[index].likes || 1) - 1); }
+            else { circlePosts[index].likedBy.push(currentUser); circlePosts[index].likes = (circlePosts[index].likes || 0) + 1; }
+            localStorage.setItem('familyCircle', JSON.stringify(circlePosts));
+            renderFeed();
+        }
+
+        function addComment(index) {
+            if (!isLoggedIn) return;
+            const input = document.getElementById('commentInput_' + index);
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { return; }
+            if (!circlePosts[index]) return;
+            if (!circlePosts[index].comments) circlePosts[index].comments = [];
+            circlePosts[index].comments.push({ user: currentUser, text, time: new Date().toLocaleString('zh-CN') });
+            localStorage.setItem('familyCircle', JSON.stringify(circlePosts));
+            renderFeed();
+        }
+
+        function insertCommentEmoji(index, emoji) { const input = document.getElementById('commentInput_' + index); if (input) { input.value += emoji; input.focus(); } const picker = document.getElementById('commentEmojiPicker_' + index); if (picker) picker.classList.remove('open'); }
+        function toggleCommentEmojiPicker(index) { const picker = document.getElementById('commentEmojiPicker_' + index); if (picker) picker.classList.toggle('open'); }
+
+        // admin 删除动态
+        function adminDeletePost(index) {
+            if (!isAdmin) return;
+            if (!confirm('确定删除这条动态？')) return;
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { return; }
+            circlePosts.splice(index, 1);
+            localStorage.setItem('familyCircle', JSON.stringify(circlePosts));
+            renderFeed();
+        }
+
+        // admin 修改动态内容
+        function adminEditPost(index) {
+            if (!isAdmin) return;
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { return; }
+            if (!circlePosts[index]) return;
+            const newContent = prompt('修改动态内容：', circlePosts[index].content || '');
+            if (newContent === null) return;
+            circlePosts[index].content = newContent;
+            localStorage.setItem('familyCircle', JSON.stringify(circlePosts));
+            renderFeed();
+        }
+
+        // 全屏图片查看器
+        let viewerImages = [];
+        let viewerIndex = 0;
+
+        function openViewer(images, idx) {
+            viewerImages = images;
+            viewerIndex = idx;
+            updateViewer();
+            document.getElementById('imgViewer').classList.add('visible');
+        }
+
+        function closeViewer() {
+            document.getElementById('imgViewer').classList.remove('visible');
+        }
+
+        function viewerSlide(dir) {
+            viewerIndex += dir;
+            if (viewerIndex < 0) viewerIndex = viewerImages.length - 1;
+            if (viewerIndex >= viewerImages.length) viewerIndex = 0;
+            updateViewer();
+        }
+
+        function updateViewer() {
+            document.getElementById('viewerImg').src = viewerImages[viewerIndex];
+            document.getElementById('viewerCounter').textContent = `${viewerIndex + 1} / ${viewerImages.length}`;
+            document.getElementById('viewerLeft').style.display = viewerImages.length > 1 ? 'flex' : 'none';
+            document.getElementById('viewerRight').style.display = viewerImages.length > 1 ? 'flex' : 'none';
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('imgViewer').classList.contains('visible')) return;
+            if (e.key === 'ArrowLeft') viewerSlide(-1);
+            else if (e.key === 'ArrowRight') viewerSlide(1);
+            else if (e.key === 'Escape') closeViewer();
+        });
+
+        function renderFeed() {
+            let circlePosts = [];
+            try { circlePosts = JSON.parse(localStorage.getItem('familyCircle') || '[]'); } catch(e) { circlePosts = []; }
+            const el = document.getElementById('circleFeed');
+
+            if (circlePosts.length === 0) {
+                el.innerHTML = '<div class="no-feed">还没有动态，来发布第一条吧</div>';
+                return;
+            }
+
+            el.innerHTML = circlePosts.map((post, i) => {
+                const avatarHTML = getUserAvatar(post.user);
+                const isLiked = isLoggedIn && post.likedBy && post.likedBy.includes(currentUser);
+                const likeClass = isLiked ? 'feed-action-btn liked' : 'feed-action-btn';
+                const contentHTML = post.content ? `<div class="feed-content">${post.content}</div>` : '';
+
+                // 微信朋友圈风格图片网格
+                let imagesHTML = '';
+                if (post.images && post.images.length > 0) {
+                    const count = post.images.length;
+                    const gClass = count <= 9 ? 'g' + count : 'g9';
+                    // 存储图片列表到全局，供点击时使用
+                    const imgId = 'imgs_' + i;
+                    imagesHTML = `<div class="feed-img-grid ${gClass}">${post.images.map((src, imgIdx) =>
+                        `<img src="${src}" onclick="openViewer(circlePostImages[${i}],${imgIdx})" alt="图片">`
+                    ).join('')}</div>`;
+                }
+
+                // admin 操作按钮
+                let adminHTML = '';
+                if (isAdmin) {
+                    adminHTML = `<span class="feed-admin-btn" onclick="adminEditPost(${i})">编辑</span><span class="feed-admin-btn" onclick="adminDeletePost(${i})" style="margin-left:8px;">删除</span>`;
+                }
+
+                // 评论区
+                const comments = post.comments || [];
+                let commentsHTML = '';
+                if (comments.length > 0 || isLoggedIn) {
+                    const commentsListHTML = comments.map(c => {
+                        const cAvatar = getUserAvatar(c.user);
+                        return `<div class="comment-item"><div class="comment-avatar">${cAvatar}</div><div class="comment-body"><span class="comment-user">${c.user}</span> <span class="comment-text">${c.text}</span><div class="comment-time">${c.time}</div></div></div>`;
+                    }).join('');
+
+                    let commentInputHTML = '';
+                    if (isLoggedIn) {
+                        const miniEmojiGrid = emojiList.slice(0, 80).map(e => `<span onclick="insertCommentEmoji(${i},'${e}')" style="font-size:1rem;cursor:pointer;padding:2px;">${e}</span>`).join('');
+                        commentInputHTML = `
+                            <div class="comment-input-row" style="position:relative;">
+                                <span class="comment-emoji-btn" onclick="toggleCommentEmojiPicker(${i})">&#128522;</span>
+                                <div class="comment-emoji-picker" id="commentEmojiPicker_${i}" onclick="event.stopPropagation()" style="bottom:34px;left:20px;">${miniEmojiGrid}</div>
+                                <input type="text" id="commentInput_${i}" placeholder="写评论..." onkeydown="if(event.key==='Enter')addComment(${i})">
+                                <button onclick="addComment(${i})">发送</button>
+                            </div>
+                        `;
+                    }
+                    commentsHTML = `<div class="comments-section">${commentsListHTML}${commentInputHTML}</div>`;
+                }
+
+                return `
+                    <div class="feed-item">
+                        <div class="feed-header">
+                            <div class="feed-avatar">${avatarHTML}</div>
+                            <div class="feed-user-info">
+                                <div class="feed-username">${post.user}</div>
+                                <div class="feed-time">${post.time}</div>
+                            </div>
+                            ${adminHTML}
+                        </div>
+                        ${contentHTML}
+                        ${imagesHTML}
+                        <div class="feed-actions">
+                            <span class="${likeClass}" onclick="toggleLike(${i})">&#10084; ${post.likes || 0}</span>
+                            <span class="feed-action-btn" onclick="document.getElementById('commentInput_${i}')&&document.getElementById('commentInput_${i}').focus()">&#128172; 评论 ${comments.length > 0 ? comments.length : ''}</span>
+                        </div>
+                        ${commentsHTML}
+                    </div>
+                `;
+            }).join('');
+
+            // 缓存图片列表供查看器使用
+            window.circlePostImages = circlePosts.map(p => p.images || []);
+        }
+
+        renderFeed();
+    </script>
+
+    <script>
+    // 强制横屏：竖屏时显示提示遮罩
+    (function() {
+        var style = document.createElement('style');
+        style.textContent = '@media screen and (orientation: portrait) { #landscapeOverlay { display: flex !important; } } #landscapeOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74,55,40,0.97); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; } #landscapeOverlay .rotate-icon { font-size: 4rem; animation: rotateHint 2s ease-in-out infinite; margin-bottom: 20px; } @keyframes rotateHint { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } } #landscapeOverlay .hint-text { color: #FFF8DC; font-size: 1.3rem; font-family: KaiTi,SimSun,serif; letter-spacing: 3px; }';
+        document.head.appendChild(style);
+        var overlay = document.createElement('div');
+        overlay.id = 'landscapeOverlay';
+        overlay.innerHTML = '<div class="rotate-icon">&#128241;</div><div class="hint-text">请横屏查看以获得最佳体验</div>';
+        document.body.appendChild(overlay);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title>墓地地图 - 家族族谱网站</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .map-page { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .map-page h1 { text-align: center; color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 2rem; margin-bottom: 8px; }
+        .map-page .subtitle { text-align: center; color: #A0522D; font-size: 1rem; margin-bottom: 25px; }
+        .map-container { display: flex; gap: 20px; min-height: 650px; }
+
+        /* 左侧边栏 */
+        .map-sidebar { width: 320px; flex-shrink: 0; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-y: auto; max-height: 750px; }
+        .map-sidebar h3 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #DAA520; }
+
+        /* 搜索框 */
+        .search-box { display: flex; gap: 8px; margin-bottom: 15px; }
+        .search-box input { flex: 1; padding: 8px 12px; border: 2px solid #DAA520; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.8); outline: none; }
+        .search-box input:focus { border-color: #8B4513; box-shadow: 0 0 6px rgba(139,69,19,0.2); }
+        .search-box button { padding: 8px 16px; background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .search-box button:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+
+        /* 代分组 */
+        .gen-group { margin-bottom: 12px; }
+        .gen-group-title { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-family: 'KaiTi','SimSun',serif; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .gen-group-title:hover { opacity: 0.9; }
+        .gen-group-title .arrow { transition: transform 0.3s; }
+        .gen-group.collapsed .arrow { transform: rotate(-90deg); }
+        .gen-group.collapsed .gen-group-items { display: none; }
+
+        .tomb-list-item { padding: 10px; margin-bottom: 6px; background: rgba(139,69,19,0.05); border-radius: 8px; cursor: pointer; transition: all 0.3s; border-left: 3px solid transparent; }
+        .tomb-list-item:hover { background: rgba(139,69,19,0.1); border-left-color: #DAA520; transform: translateX(3px); }
+        .tomb-list-item.active { background: rgba(218,165,32,0.15); border-left-color: #8B4513; }
+        .tomb-list-item .name { font-weight: bold; color: #8B4513; font-size: 0.95rem; margin-bottom: 3px; }
+        .tomb-list-item .years { color: #A0522D; font-size: 0.8rem; margin-bottom: 3px; }
+        .tomb-list-item .address { color: #666; font-size: 0.75rem; }
+
+        /* 右侧主区域 */
+        .map-main { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+
+        /* 地图区域 */
+        .map-canvas-wrapper { flex: 1; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; min-height: 450px; overflow: hidden; }
+        .map-iframe { width: 100%; height: 100%; min-height: 430px; border: none; border-radius: 8px; }
+
+        /* 详情面板 */
+        .tomb-detail { background: rgba(255,248,220,0.92); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        .tomb-detail.visible { display: block; }
+        .tomb-detail-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #DAA520; }
+        .tomb-detail-header h2 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 1.4rem; }
+        .tomb-detail-header .generation-badge { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .tomb-detail-body { display: flex; gap: 20px; }
+        .tomb-detail-info { flex: 1; }
+        .tomb-detail-info .info-row { display: flex; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+        .tomb-detail-info .info-label { color: #8B4513; font-weight: bold; min-width: 80px; font-size: 0.9rem; }
+        .tomb-detail-info .info-value { color: #333; font-size: 0.9rem; line-height: 1.5; }
+        .tomb-detail-image { width: 280px; flex-shrink: 0; }
+        .tomb-detail-image img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .tomb-detail-image .image-caption { text-align: center; color: #A0522D; font-size: 0.8rem; margin-top: 6px; font-style: italic; }
+
+        /* Admin 编辑按钮 */
+        .admin-tomb-btns { margin-top: 15px; padding-top: 12px; border-top: 1px solid #DAA520; display: none; }
+        .admin-tomb-btns.visible { display: flex; gap: 10px; }
+        .admin-tomb-btns button { padding: 8px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; }
+        .admin-tomb-btns .btn-edit { background: rgba(139,69,19,0.85); color: #FFF8DC; }
+        .admin-tomb-btns .btn-edit:hover { background: rgba(139,69,19,1); }
+        .admin-tomb-btns .btn-delete { background: rgba(180,60,60,0.85); color: #FFF8DC; }
+        .admin-tomb-btns .btn-delete:hover { background: rgba(180,60,60,1); }
+
+        /* Admin 添加按钮 */
+        .admin-add-btn { display: none; margin-bottom: 10px; }
+        .admin-add-btn.visible { display: block; }
+        .admin-add-btn button { width: 100%; padding: 10px; background: rgba(139,69,19,0.85); color: #FFF8DC; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; }
+        .admin-add-btn button:hover { background: rgba(139,69,19,1); }
+
+        /* 模态框 */
+        .tomb-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .tomb-modal-overlay.visible { display: flex; }
+        .tomb-modal { background: rgba(255,248,220,0.98); border-radius: 12px; padding: 25px; width: 500px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .tomb-modal h3 { color: #8B4513; font-family: 'KaiTi','SimSun',serif; font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #DAA520; }
+        .tomb-modal .form-group { margin-bottom: 12px; }
+        .tomb-modal .form-group label { display: block; color: #8B4513; font-weight: bold; margin-bottom: 4px; font-size: 0.9rem; }
+        .tomb-modal .form-group input, .tomb-modal .form-group textarea, .tomb-modal .form-group select { width: 100%; padding: 8px 12px; border: 2px solid #DAA520; border-radius: 8px; font-size: 0.9rem; background: rgba(255,255,255,0.8); outline: none; box-sizing: border-box; }
+        .tomb-modal .form-group input:focus, .tomb-modal .form-group textarea:focus, .tomb-modal .form-group select:focus { border-color: #8B4513; }
+        .tomb-modal .form-group textarea { height: 60px; resize: vertical; }
+        .tomb-modal .form-group .hint { color: #999; font-size: 0.75rem; margin-top: 2px; }
+        .tomb-modal .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .tomb-modal .modal-btns button { padding: 8px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; }
+        .tomb-modal .modal-btns .btn-save { background: rgba(139,69,19,0.85); color: #FFF8DC; }
+        .tomb-modal .modal-btns .btn-save:hover { background: rgba(139,69,19,1); }
+        .tomb-modal .modal-btns .btn-cancel { background: rgba(150,150,150,0.6); color: #333; }
+        .tomb-modal .modal-btns .btn-cancel:hover { background: rgba(150,150,150,0.8); }
+
+        
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">家族族谱</div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><span class="nav-icon">&#9750;</span><span class="nav-text">首页</span></a></li>
+                <li><a href="tree.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="8" x2="5" y2="14"/><line x1="12" y1="8" x2="19" y2="14"/><line x1="5" y1="14" x2="5" y2="20"/><line x1="19" y1="14" x2="19" y2="20"/><circle cx="5" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">族谱树</span></a></li>
+                <li><a href="members.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="nav-text">家族成员</span></a></li>
+                <li><a href="map.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor"/></svg></span><span class="nav-text">墓地地图</span></a></li>
+                <li><a href="activities.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg></span><span class="nav-text">家族活动</span></a></li>
+                <li><a href="houses.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-9"/><path d="M9 21h6"/></svg></span><span class="nav-text">老宅展示</span></a></li>
+                <li><a href="circle.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">家族圈</span></a></li>
+                <li><a href="about.html"><span class="nav-icon">&#9733;</span><span class="nav-text">关于我们</span></a></li>
+                <li id="navLoginItem"></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="map-page">
+            <h1>家族墓地地图</h1>
+            <p class="subtitle">缅怀先祖，铭记根源</p>
+
+            <div class="map-container">
+                <div class="map-sidebar">
+                    <h3>已故先人</h3>
+                    <div class="admin-add-btn" id="adminAddTombBtn">
+                        <button onclick="showAddTombModal()">+ 添加墓地信息</button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="搜索姓名..." oninput="filterTombList()">
+                        <button onclick="filterTombList()">搜索</button>
+                    </div>
+                    <div id="tombList"></div>
+                </div>
+
+                <div class="map-main">
+                    <div class="map-canvas-wrapper">
+                        <iframe class="map-iframe" id="mapIframe" src="https://www.openstreetmap.org/export/embed.html?bbox=112.0%2C33.5%2C114.5%2C35.0&layer=mapnik" loading="lazy"></iframe>
+                    </div>
+
+                    <div class="tomb-detail" id="tombDetail">
+                        <div class="tomb-detail-header">
+                            <h2 id="detailName"></h2>
+                            <span class="generation-badge" id="detailGen"></span>
+                        </div>
+                        <div class="tomb-detail-body">
+                            <div class="tomb-detail-info">
+                                <div class="info-row"><span class="info-label">生卒年：</span><span class="info-value" id="detailYears"></span></div>
+                                <div class="info-row"><span class="info-label">墓地地址：</span><span class="info-value" id="detailAddress"></span></div>
+                                <div class="info-row"><span class="info-label">经纬度：</span><span class="info-value" id="detailCoords"></span></div>
+                                <div class="info-row"><span class="info-label">籍贯：</span><span class="info-value" id="detailBirthPlace"></span></div>
+                                <div class="info-row"><span class="info-label">职业：</span><span class="info-value" id="detailOccupation"></span></div>
+                                <div class="info-row"><span class="info-label">简介：</span><span class="info-value" id="detailBio"></span></div>
+                            </div>
+                            <div class="tomb-detail-image">
+                                <img id="detailImage" src="" alt="墓地图片">
+                                <p class="image-caption" id="detailCaption"></p>
+                            </div>
+                        </div>
+                        <div class="admin-tomb-btns" id="adminTombBtns">
+                            <button class="btn-edit" onclick="showEditTombModal()">编辑墓地信息</button>
+                            <button class="btn-delete" onclick="deleteTombInfo()">删除墓地信息</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 编辑墓地模态框 -->
+    <div class="tomb-modal-overlay" id="tombModalOverlay">
+        <div class="tomb-modal">
+            <h3 id="tombModalTitle">编辑墓地信息</h3>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="modalName" placeholder="姓名">
+            </div>
+            <div class="form-group">
+                <label>第几世</label>
+                <select id="modalGeneration">
+                    <option value="1">第1世</option>
+                    <option value="2">第2世</option>
+                    <option value="3">第3世</option>
+                    <option value="4">第4世</option>
+                    <option value="5">第5世</option>
+                    <option value="6">第6世</option>
+                    <option value="7">第7世</option>
+                    <option value="8">第8世</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>出生年份</label>
+                <input type="text" id="modalBirthYear" placeholder="如：1850">
+            </div>
+            <div class="form-group">
+                <label>去世年份</label>
+                <input type="text" id="modalDeathYear" placeholder="如：1920">
+            </div>
+            <div class="form-group">
+                <label>墓地地址</label>
+                <input type="text" id="modalAddress" placeholder="墓地地址">
+            </div>
+            <div class="form-group">
+                <label>纬度 (lat)</label>
+                <input type="number" step="0.001" id="modalLat" placeholder="如：34.82">
+                <div class="hint">修改地址后可在此调整纬度，地图将自动重定位</div>
+            </div>
+            <div class="form-group">
+                <label>经度 (lng)</label>
+                <input type="number" step="0.001" id="modalLng" placeholder="如：112.45">
+                <div class="hint">修改地址后可在此调整经度，地图将自动重定位</div>
+            </div>
+            <div class="form-group">
+                <label>籍贯</label>
+                <input type="text" id="modalBirthPlace" placeholder="籍贯">
+            </div>
+            <div class="form-group">
+                <label>职业</label>
+                <input type="text" id="modalOccupation" placeholder="职业">
+            </div>
+            <div class="form-group">
+                <label>简介</label>
+                <textarea id="modalBio" placeholder="简介"></textarea>
+            </div>
+            <div class="form-group">
+                <label>墓地图片URL</label>
+                <input type="text" id="modalImage" placeholder="图片URL">
+            </div>
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeTombModal()">取消</button>
+                <button class="btn-save" onclick="saveTombInfo()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 家族族谱网站. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="data.js"></script>
+    <script>
+        // 加载自定义墓地数据
+        function loadCustomTombData() {
+            const customData = localStorage.getItem('familyTombData');
+            if (customData) {
+                try {
+                    const overrides = JSON.parse(customData);
+                    overrides.forEach(override => {
+                        const member = familyData.members.find(m => m.id === override.id);
+                        if (member) {
+                            if (override.name) member.name = override.name;
+                            if (override.generation) member.generation = override.generation;
+                            if (override.birthYear) member.birthYear = override.birthYear;
+                            if (override.deathYear) member.deathYear = override.deathYear;
+                            if (override.birthPlace) member.birthPlace = override.birthPlace;
+                            if (override.occupation) member.occupation = override.occupation;
+                            if (override.bio) member.bio = override.bio;
+                            if (override.tomb) {
+                                if (!member.tomb) member.tomb = {};
+                                if (override.tomb.address) member.tomb.address = override.tomb.address;
+                                if (override.tomb.lat !== undefined) member.tomb.lat = override.tomb.lat;
+                                if (override.tomb.lng !== undefined) member.tomb.lng = override.tomb.lng;
+                                if (override.tomb.image) member.tomb.image = override.tomb.image;
+                            }
+                        }
+                    });
+                } catch(e) {}
+            }
+            // 加载新增的墓地成员
+            const addedData = localStorage.getItem('familyTombAdded');
+            if (addedData) {
+                try {
+                    const added = JSON.parse(addedData);
+                    added.forEach(item => {
+                        if (!familyData.members.find(m => m.id === item.id)) {
+                            familyData.members.push(item);
+                        }
+                    });
+                } catch(e) {}
+            }
+        }
+
+        loadCustomTombData();
+
+        // 当前选中的成员ID
+        let selectedMemberId = null;
+
+        const deceasedMembers = familyData.members.filter(m => m.deathYear && m.tomb);
+
+        // 按代分组
+        function getDeceasedByGeneration() {
+            const groups = {};
+            deceasedMembers.forEach(m => {
+                if (!groups[m.generation]) groups[m.generation] = [];
+                groups[m.generation].push(m);
+            });
+            return groups;
+        }
+
+        // 渲染侧边栏列表（按代分组）
+        function renderTombList(filter = '') {
+            const listEl = document.getElementById('tombList');
+            listEl.innerHTML = '';
+            const groups = getDeceasedByGeneration();
+            const sortedGens = Object.keys(groups).sort((a, b) => a - b);
+
+            sortedGens.forEach(gen => {
+                let members = groups[gen];
+                if (filter) {
+                    members = members.filter(m => m.name.includes(filter));
+                }
+                if (members.length === 0) return;
+
+                const group = document.createElement('div');
+                group.className = 'gen-group';
+
+                const title = document.createElement('div');
+                title.className = 'gen-group-title';
+                title.innerHTML = `第${gen}世 <span class="arrow">&#9660;</span>`;
+                title.addEventListener('click', () => {
+                    group.classList.toggle('collapsed');
+                });
+                group.appendChild(title);
+
+                const items = document.createElement('div');
+                items.className = 'gen-group-items';
+                members.forEach(member => {
+                    const item = document.createElement('div');
+                    item.className = 'tomb-list-item';
+                    item.dataset.memberId = member.id;
+                    item.innerHTML = `
+                        <div class="name">${member.name}</div>
+                        <div class="years">${member.birthYear} - ${member.deathYear}</div>
+                        <div class="address">${member.tomb.address}</div>
+                    `;
+                    item.addEventListener('click', () => selectMember(member.id));
+                    items.appendChild(item);
+                });
+                group.appendChild(items);
+                listEl.appendChild(group);
+            });
+        }
+
+        // 搜索过滤
+        function filterTombList() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            renderTombList(keyword);
+        }
+
+        // 选中成员
+        function selectMember(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member || !member.tomb) return;
+
+            selectedMemberId = memberId;
+
+            // 更新侧边栏选中状态
+            document.querySelectorAll('.tomb-list-item').forEach(item => {
+                item.classList.toggle('active', parseInt(item.dataset.memberId) === memberId);
+            });
+
+            // 更新地图iframe，定位到该墓地
+            updateMapLocation(member.tomb.lat, member.tomb.lng);
+
+            // 更新详情
+            document.getElementById('detailName').textContent = member.name;
+            document.getElementById('detailGen').textContent = `第${member.generation}世`;
+            document.getElementById('detailYears').textContent = `${member.birthYear} - ${member.deathYear}`;
+            document.getElementById('detailAddress').textContent = member.tomb.address;
+            document.getElementById('detailCoords').textContent = `${member.tomb.lat}°N, ${member.tomb.lng}°E`;
+            document.getElementById('detailBirthPlace').textContent = member.birthPlace || '未知';
+            document.getElementById('detailOccupation').textContent = member.occupation || '未知';
+            document.getElementById('detailBio').textContent = member.bio || '暂无简介';
+
+            const img = document.getElementById('detailImage');
+            img.src = member.tomb.image;
+            img.alt = `${member.name}墓地`;
+            document.getElementById('detailCaption').textContent = `${member.name}墓地实景`;
+
+            document.getElementById('tombDetail').classList.add('visible');
+
+            // 显示admin按钮
+            if (authSystem.isAdmin()) {
+                document.getElementById('adminTombBtns').classList.add('visible');
+            }
+        }
+
+        // 更新地图位置
+        function updateMapLocation(lat, lng) {
+            const delta = 0.05;
+            const bbox = `${lng-delta}%2C${lat-delta}%2C${lng+delta}%2C${lat+delta}`;
+            const marker = `&marker=${lat}%2C${lng}`;
+            document.getElementById('mapIframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik${marker}`;
+        }
+
+        // 保存墓地数据到localStorage
+        function saveTombDataToStorage() {
+            const overrides = [];
+            familyData.members.forEach(m => {
+                if (m.tomb && m.deathYear) {
+                    overrides.push({
+                        id: m.id,
+                        name: m.name,
+                        generation: m.generation,
+                        birthYear: m.birthYear,
+                        deathYear: m.deathYear,
+                        birthPlace: m.birthPlace,
+                        occupation: m.occupation,
+                        bio: m.bio,
+                        tomb: { ...m.tomb }
+                    });
+                }
+            });
+            localStorage.setItem('familyTombData', JSON.stringify(overrides));
+        }
+
+        // 显示编辑模态框
+        function showEditTombModal() {
+            if (!selectedMemberId) return;
+            const member = familyData.members.find(m => m.id === selectedMemberId);
+            if (!member) return;
+
+            document.getElementById('tombModalTitle').textContent = '编辑墓地信息';
+            document.getElementById('modalName').value = member.name || '';
+            document.getElementById('modalGeneration').value = member.generation || 1;
+            document.getElementById('modalBirthYear').value = member.birthYear || '';
+            document.getElementById('modalDeathYear').value = member.deathYear || '';
+            document.getElementById('modalAddress').value = member.tomb ? member.tomb.address : '';
+            document.getElementById('modalLat').value = member.tomb ? member.tomb.lat : '';
+            document.getElementById('modalLng').value = member.tomb ? member.tomb.lng : '';
+            document.getElementById('modalBirthPlace').value = member.birthPlace || '';
+            document.getElementById('modalOccupation').value = member.occupation || '';
+            document.getElementById('modalBio').value = member.bio || '';
+            document.getElementById('modalImage').value = member.tomb ? member.tomb.image : '';
+
+            document.getElementById('tombModalOverlay').classList.add('visible');
+            document.getElementById('tombModalOverlay').dataset.mode = 'edit';
+        }
+
+        // 显示添加模态框
+        function showAddTombModal() {
+            document.getElementById('tombModalTitle').textContent = '添加墓地信息';
+            document.getElementById('modalName').value = '';
+            document.getElementById('modalGeneration').value = 1;
+            document.getElementById('modalBirthYear').value = '';
+            document.getElementById('modalDeathYear').value = '';
+            document.getElementById('modalAddress').value = '';
+            document.getElementById('modalLat').value = '';
+            document.getElementById('modalLng').value = '';
+            document.getElementById('modalBirthPlace').value = '';
+            document.getElementById('modalOccupation').value = '';
+            document.getElementById('modalBio').value = '';
+            document.getElementById('modalImage').value = '';
+
+            document.getElementById('tombModalOverlay').classList.add('visible');
+            document.getElementById('tombModalOverlay').dataset.mode = 'add';
+        }
+
+        // 关闭模态框
+        function closeTombModal() {
+            document.getElementById('tombModalOverlay').classList.remove('visible');
+        }
+
+        // 保存墓地信息
+        function saveTombInfo() {
+            const mode = document.getElementById('tombModalOverlay').dataset.mode;
+            const name = document.getElementById('modalName').value.trim();
+            const generation = parseInt(document.getElementById('modalGeneration').value) || 1;
+            const birthYear = document.getElementById('modalBirthYear').value.trim();
+            const deathYear = document.getElementById('modalDeathYear').value.trim();
+            const address = document.getElementById('modalAddress').value.trim();
+            const lat = parseFloat(document.getElementById('modalLat').value);
+            const lng = parseFloat(document.getElementById('modalLng').value);
+            const birthPlace = document.getElementById('modalBirthPlace').value.trim();
+            const occupation = document.getElementById('modalOccupation').value.trim();
+            const bio = document.getElementById('modalBio').value.trim();
+            const image = document.getElementById('modalImage').value.trim();
+
+            if (!name) { alert('请输入姓名'); return; }
+            if (!deathYear) { alert('请输入去世年份'); return; }
+            if (!address) { alert('请输入墓地地址'); return; }
+            if (isNaN(lat) || isNaN(lng)) { alert('请输入有效的经纬度'); return; }
+
+            if (mode === 'edit') {
+                const member = familyData.members.find(m => m.id === selectedMemberId);
+                if (!member) return;
+
+                member.name = name;
+                member.generation = generation;
+                member.birthYear = birthYear;
+                member.deathYear = deathYear;
+                member.birthPlace = birthPlace;
+                member.occupation = occupation;
+                member.bio = bio;
+                if (!member.tomb) member.tomb = {};
+                member.tomb.address = address;
+                member.tomb.lat = lat;
+                member.tomb.lng = lng;
+                member.tomb.image = image || 'https://images.unsplash.com/photo-1506901878852-4c4e5a6b9892?w=600&q=80';
+
+                saveTombDataToStorage();
+                closeTombModal();
+
+                // 刷新列表和详情（地址/经纬度修改后地图自动重定位）
+                renderTombList();
+                selectMember(selectedMemberId);
+            } else if (mode === 'add') {
+                const maxId = Math.max(...familyData.members.map(m => m.id), 0);
+                const newId = maxId + 1;
+                const newMember = {
+                    id: newId,
+                    name: name,
+                    generation: generation,
+                    birthYear: birthYear,
+                    deathYear: deathYear,
+                    birthPlace: birthPlace,
+                    occupation: occupation,
+                    bio: bio,
+                    tomb: {
+                        address: address,
+                        lat: lat,
+                        lng: lng,
+                        image: image || 'https://images.unsplash.com/photo-1506901878852-4c4e5a6b9892?w=600&q=80'
+                    }
+                };
+                familyData.members.push(newMember);
+
+                const addedData = localStorage.getItem('familyTombAdded');
+                const added = addedData ? JSON.parse(addedData) : [];
+                added.push(newMember);
+                localStorage.setItem('familyTombAdded', JSON.stringify(added));
+
+                closeTombModal();
+                renderTombList();
+                selectMember(newId);
+            }
+        }
+
+        // 删除墓地信息
+        function deleteTombInfo() {
+            if (!selectedMemberId) return;
+            const member = familyData.members.find(m => m.id === selectedMemberId);
+            if (!member) return;
+
+            if (!confirm(`确定要删除 ${member.name} 的墓地信息吗？`)) return;
+
+            delete member.tomb;
+            member.deathYear = '';
+
+            saveTombDataToStorage();
+
+            document.getElementById('tombDetail').classList.remove('visible');
+            document.getElementById('adminTombBtns').classList.remove('visible');
+            selectedMemberId = null;
+
+            renderTombList();
+        }
+
+        // 初始化admin控件
+        function initAdminControls() {
+            if (authSystem.isAdmin()) {
+                document.getElementById('adminAddTombBtn').classList.add('visible');
+            }
+        }
+
+        // 初始化
+        renderTombList();
+        initAdminControls();
+
+        // 点击模态框外部关闭
+        document.getElementById('tombModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeTombModal();
+        });
+    </script>
+
+    <script>
+    // 强制横屏：竖屏时显示提示遮罩
+    (function() {
+        var style = document.createElement('style');
+        style.textContent = '@media screen and (orientation: portrait) { #landscapeOverlay { display: flex !important; } } #landscapeOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74,55,40,0.97); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; } #landscapeOverlay .rotate-icon { font-size: 4rem; animation: rotateHint 2s ease-in-out infinite; margin-bottom: 20px; } @keyframes rotateHint { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } } #landscapeOverlay .hint-text { color: #FFF8DC; font-size: 1.3rem; font-family: KaiTi,SimSun,serif; letter-spacing: 3px; }';
+        document.head.appendChild(style);
+        var overlay = document.createElement('div');
+        overlay.id = 'landscapeOverlay';
+        overlay.innerHTML = '<div class="rotate-icon">&#128241;</div><div class="hint-text">请横屏查看以获得最佳体验</div>';
+        document.body.appendChild(overlay);
+    })();
+    </script>
+</body>
+</html>

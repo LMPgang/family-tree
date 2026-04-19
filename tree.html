@@ -2,14 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
     <title>族谱树 - 家族族谱网站</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         .tree-section {
             padding: 2rem 0;
             min-height: calc(100vh - 200px);
-            background: linear-gradient(135deg, rgba(139, 69, 19, 0.05) 0%, rgba(205, 133, 63, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.06) 0%, rgba(205, 133, 63, 0.08) 50%, rgba(139, 69, 19, 0.04) 100%);
             position: relative;
             overflow: hidden;
         }
@@ -24,7 +24,7 @@
             background: url('https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=1920&q=80');
             background-size: cover;
             background-position: center;
-            opacity: 0.03;
+            opacity: 0.05;
             z-index: 0;
         }
 
@@ -44,7 +44,7 @@
 
         /* 控制面板 */
         .control-panel {
-            background: rgba(255, 248, 220, 0.95);
+            background: rgba(255, 248, 220, 0.92);
             padding: 1.5rem;
             border-radius: 15px;
             margin-bottom: 1.5rem;
@@ -106,13 +106,27 @@
         /* 族谱树容器 */
         .tree-wrapper {
             position: relative;
-            background: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, rgba(255,248,220,0.92) 0%, rgba(253,245,210,0.92) 50%, rgba(255,240,200,0.92) 100%);
             border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), inset 0 0 30px rgba(139,69,19,0.04);
             border: 2px solid #DAA520;
             overflow: hidden;
-            height: 70vh;
-            min-height: 500px;
+            height: 85vh;
+            min-height: 600px;
+        }
+
+        /* 古卷内边框装饰 */
+        .tree-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid rgba(218,165,32,0.25);
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .tree-container {
@@ -137,38 +151,57 @@
             padding: 50px;
         }
 
+        /* 宣纸纹理效果 */
+        .tree-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(139,69,19,0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(218,165,32,0.02) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(160,82,45,0.02) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         /* 水平布局的族谱树 */
         .tree-horizontal {
             display: flex;
             flex-direction: column;
-            gap: 60px;
-            padding: 30px;
+            gap: 30px;
+            padding: 20px;
         }
 
         .generation-row {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 18px;
             position: relative;
-            min-height: 80px;
+            min-height: 60px;
+            margin-bottom: 55px;
         }
 
         .generation-label {
             position: absolute;
-            left: -80px;
+            left: -100px;
             top: 50%;
             transform: translateY(-50%);
             background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
             color: #FFF8DC;
             padding: 8px 15px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 16px;
             font-family: 'KaiTi', 'SimSun', serif;
             border: 2px solid #DAA520;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             white-space: nowrap;
             font-weight: bold;
+            text-align: center;
+            line-height: 1.4;
         }
 
         /* 族谱树节点样式 */
@@ -217,56 +250,116 @@
 
         .tree-node .name {
             font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 4px;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: #4a3728;
+            color: #2C1810;
         }
 
-        .tree-node .generation {
-            font-size: 0.8rem;
-            font-weight: 600;
+        .tree-node .clan-name {
+            font-size: 0.82rem;
             white-space: nowrap;
-            color: #2d1f14;
+            color: #5D3A1A;
+            font-style: italic;
         }
 
-        .tree-node .years {
-            font-size: 0.75rem;
-            margin-top: 3px;
-            white-space: nowrap;
-            color: #3d2914;
+        .tree-node .sibling-order {
+            position: absolute;
+            top: 3px;
+            left: 5px;
+            font-size: 0.65rem;
+            color: #8B7355;
+            font-weight: bold;
+            background: rgba(218,165,32,0.15);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 不同代的颜色方案 */
+        .tree-node .children-count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 0.6rem;
+            color: #8B7355;
+            background: rgba(218,165,32,0.15);
+            padding: 1px 4px;
+            border-radius: 8px;
+        }
+
+        /* 女性节点样式 */
+        .tree-node.female {
+            border-style: dashed;
+        }
+
+        .tree-node.female .name {
+            color: #8B2252;
+        }
+
+        /* 不同代的颜色方案 - 降低背景透明度凸显文字 */
         .gen-1 {
-            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
+            background: linear-gradient(135deg, rgba(255,248,220,0.55) 0%, rgba(255,228,181,0.55) 100%);
             border-color: #DAA520;
         }
 
         .gen-2 {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            background: linear-gradient(135deg, rgba(232,245,233,0.55) 0%, rgba(200,230,201,0.55) 100%);
             border-color: #4CAF50;
         }
 
         .gen-3 {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            background: linear-gradient(135deg, rgba(227,242,253,0.55) 0%, rgba(187,222,251,0.55) 100%);
             border-color: #2196F3;
         }
 
         .gen-4 {
-            background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+            background: linear-gradient(135deg, rgba(243,229,245,0.55) 0%, rgba(225,190,231,0.55) 100%);
             border-color: #9C27B0;
         }
 
         .gen-5 {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+            background: linear-gradient(135deg, rgba(255,243,224,0.55) 0%, rgba(255,224,178,0.55) 100%);
             border-color: #FF9800;
         }
 
         .gen-6 {
-            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+            background: linear-gradient(135deg, rgba(255,235,238,0.55) 0%, rgba(255,205,210,0.55) 100%);
+            border-color: #F44336;
+        }
+
+        /* 女性不同代的颜色方案 - 颜色与男性一致，透明度更浅(0.3) */
+        .female.gen-1 {
+            background: linear-gradient(135deg, rgba(255,248,220,0.3) 0%, rgba(255,228,181,0.3) 100%);
+            border-color: #DAA520;
+        }
+
+        .female.gen-2 {
+            background: linear-gradient(135deg, rgba(232,245,233,0.3) 0%, rgba(200,230,201,0.3) 100%);
+            border-color: #4CAF50;
+        }
+
+        .female.gen-3 {
+            background: linear-gradient(135deg, rgba(227,242,253,0.3) 0%, rgba(187,222,251,0.3) 100%);
+            border-color: #2196F3;
+        }
+
+        .female.gen-4 {
+            background: linear-gradient(135deg, rgba(243,229,245,0.3) 0%, rgba(225,190,231,0.3) 100%);
+            border-color: #9C27B0;
+        }
+
+        .female.gen-5 {
+            background: linear-gradient(135deg, rgba(255,243,224,0.3) 0%, rgba(255,224,178,0.3) 100%);
+            border-color: #FF9800;
+        }
+
+        .female.gen-6 {
+            background: linear-gradient(135deg, rgba(255,235,238,0.3) 0%, rgba(255,205,210,0.3) 100%);
             border-color: #F44336;
         }
 
@@ -328,6 +421,13 @@
         }
 
         .tree-node:hover .highlight-btn {
+            opacity: 1;
+            visibility: visible;
+            top: -45px;
+        }
+
+        /* 高亮状态下也显示按钮 */
+        .tree-node.highlighted .highlight-btn {
             opacity: 1;
             visibility: visible;
             top: -45px;
@@ -408,58 +508,7 @@
         }
 
         /* 响应式设计 */
-        @media (max-width: 768px) {
-            .control-panel {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .control-group {
-                justify-content: center;
-            }
-
-            .search-container input {
-                width: 150px;
-            }
-
-            .tree-wrapper {
-                height: 60vh;
-                min-height: 400px;
-            }
-
-            .tree-node {
-                min-width: 90px;
-                max-width: 110px;
-                padding: 8px 10px;
-            }
-
-            .tree-node .name {
-                font-size: 0.9rem;
-            }
-
-            .tree-node .generation {
-                font-size: 0.7rem;
-            }
-
-            .tree-node .years {
-                font-size: 0.65rem;
-            }
-
-            .generation-row {
-                gap: 15px;
-            }
-
-            .generation-label {
-                left: -60px;
-                font-size: 12px;
-                padding: 5px 10px;
-            }
-
-            .highlight-btn {
-                font-size: 10px;
-                padding: 4px 8px;
-            }
-        }
+        
     </style>
 </head>
 <body>
@@ -467,10 +516,15 @@
         <nav class="navbar">
             <div class="nav-brand">家族族谱</div>
             <ul class="nav-menu">
-                <li><a href="index.html">首页</a></li>
-                <li><a href="tree.html">族谱树</a></li>
-                <li><a href="members.html">家族成员</a></li>
-                <li><a href="about.html">关于我们</a></li>
+                <li><a href="index.html"><span class="nav-icon">&#9750;</span><span class="nav-text">首页</span></a></li>
+                <li><a href="tree.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="8" x2="5" y2="14"/><line x1="12" y1="8" x2="19" y2="14"/><line x1="5" y1="14" x2="5" y2="20"/><line x1="19" y1="14" x2="19" y2="20"/><circle cx="5" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">族谱树</span></a></li>
+                <li><a href="members.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="nav-text">家族成员</span></a></li>
+                <li><a href="map.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="currentColor"/></svg></span><span class="nav-text">墓地地图</span></a></li>
+                <li><a href="activities.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg></span><span class="nav-text">家族活动</span></a></li>
+                <li><a href="houses.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v9a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-9"/><path d="M9 21h6"/></svg></span><span class="nav-text">老宅展示</span></a></li>
+                <li><a href="circle.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="nav-text">家族圈</span></a></li>
+                <li><a href="about.html"><span class="nav-icon">&#9733;</span><span class="nav-text">关于我们</span></a></li>
+                <li id="navLoginItem"></li>
             </ul>
         </nav>
     </header>
@@ -490,8 +544,14 @@
 
                     <div class="control-group">
                         <button class="btn-control" onclick="resetView()">重置视图</button>
-                        <button class="btn-control" onclick="centerTree()">居中显示</button>
-                        <button class="btn-control" onclick="clearHighlight()" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); border-color: #FF4444;">取消高亮</button>
+                        <button class="btn-control" onclick="clearHighlight()" style="background: rgba(255,107,107,0.75); border-color: #E53935;">取消高亮</button>
+                        <button class="btn-control" id="toggleFemaleBtn" onclick="toggleFemale()" style="background: rgba(233,30,99,0.75); border-color: #C2185B;">隐藏女性</button>
+                        <button class="btn-control" onclick="refreshTree()" style="background: rgba(93,64,55,0.75); border-color: #4E342E;">刷新</button>
+                    </div>
+
+                    <div class="control-group" id="adminControls" style="display:none;">
+                        <button class="btn-control" onclick="showAddMemberModal()" style="background: rgba(56,142,60,0.75); border-color: #2E7D32;">添加成员</button>
+                        <button class="btn-control" onclick="showEditGenNamesModal()" style="background: rgba(56,142,60,0.75); border-color: #2E7D32;">编辑辈分名称</button>
                     </div>
                 </div>
 
@@ -531,6 +591,7 @@
     <!-- 工具提示 -->
     <div class="tooltip" id="tooltip"></div>
 
+    <script src="auth.js"></script>
     <script src="data.js"></script>
     <script>
         // 全局变量
@@ -539,6 +600,7 @@
         let translateY = 0;
         let isDragging = false;
         let startX, startY;
+        let hideFemale = false; // 是否隐藏女性
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -552,9 +614,71 @@
         function renderTree() {
             const treeContainer = document.getElementById('familyTree');
 
+            // 辅助函数：判断是否女性
+            const isFemale = (id) => familyData.femaleIds && familyData.femaleIds.includes(id);
+            // 辅助函数：获取祠堂名
+            const getClanName = (id) => familyData.clanNames ? (familyData.clanNames[id] || '') : '';
+            // 辅助函数：获取辈分名
+            const getGenName = (gen) => familyData.generationNames ? (familyData.generationNames[gen] || '') : '';
+
+            // 计算每个成员的兄弟姐妹排序
+            const siblingOrderMap = {};
+            const fatherChildrenMap = {};
+            familyData.members.forEach(m => {
+                const fid = m.father || 0;
+                if (!fatherChildrenMap[fid]) fatherChildrenMap[fid] = [];
+                fatherChildrenMap[fid].push(m.id);
+            });
+            Object.keys(fatherChildrenMap).forEach(fid => {
+                // 按id排序（年长的id小）
+                const sorted = fatherChildrenMap[fid].sort((a, b) => a - b);
+                sorted.forEach((id, idx) => {
+                    siblingOrderMap[id] = idx + 1;
+                });
+            });
+
+            // 计算每个成员的子女数（儿/女）
+            const childrenCountMap = {};
+            familyData.members.forEach(m => {
+                if (m.children && m.children.length > 0) {
+                    let sons = 0, daughters = 0;
+                    m.children.forEach(cid => {
+                        if (isFemale(cid)) daughters++;
+                        else sons++;
+                    });
+                    if (sons > 0 || daughters > 0) {
+                        childrenCountMap[m.id] = (sons > 0 ? sons + '儿' : '') + (daughters > 0 ? daughters + '女' : '');
+                    }
+                }
+            });
+
+            // 计算需要排除的成员ID集合（女性的所有后代，递归，但不排除女性本身）
+            const excludedIds = new Set();
+            // 找出所有女性的子女ID，加入排除集合
+            familyData.members.forEach(m => {
+                if (isFemale(m.id) && m.children) {
+                    m.children.forEach(cid => excludedIds.add(cid));
+                }
+            });
+            // 递归：如果一个人的father在排除集合中，则也排除
+            let changed = true;
+            while (changed) {
+                changed = false;
+                familyData.members.forEach(m => {
+                    if (!excludedIds.has(m.id) && m.father && excludedIds.has(m.father)) {
+                        excludedIds.add(m.id);
+                        changed = true;
+                    }
+                });
+            }
+
             // 按世代分组
             const generations = {};
             familyData.members.forEach(member => {
+                // 排除女性的所有后代（女性本身保留显示，除非hideFemale开启）
+                if (excludedIds.has(member.id)) return;
+                // 隐藏女性模式下额外跳过女性本身
+                if (hideFemale && isFemale(member.id)) return;
                 if (!generations[member.generation]) {
                     generations[member.generation] = [];
                 }
@@ -567,7 +691,8 @@
 
             sortedGenerations.forEach(gen => {
                 const members = generations[gen];
-                const genClass = `gen-${Math.min(gen, 6)}`; // 最多6种颜色
+                const genClass = `gen-${Math.min(gen, 6)}`;
+                const genName = getGenName(parseInt(gen));
 
                 // 按父亲分组，同一父亲的子女放在一起
                 const fatherGroups = {};
@@ -581,25 +706,32 @@
 
                 // 按父亲ID排序，确保顺序一致
                 const sortedFatherIds = Object.keys(fatherGroups).sort((a, b) => {
-                    if (a === 0) return -1; // 没有父亲的放前面
+                    if (a === 0) return -1;
                     if (b === 0) return 1;
                     return a - b;
                 });
 
                 treeHTML += `
                     <div class="generation-row" data-generation="${gen}">
-                        <div class="generation-label">第${gen}代</div>
+                        <div class="generation-label">第${gen}世<br><span style="font-size:0.75em;font-weight:normal;opacity:0.85;">(${genName})</span></div>
                 `;
 
                 sortedFatherIds.forEach(fatherId => {
                     const groupMembers = fatherGroups[fatherId];
                     groupMembers.forEach(member => {
+                        const female = isFemale(member.id);
+                        const femaleClass = female ? ' female' : '';
+                        const clanName = getClanName(member.id);
+                        const siblingOrder = siblingOrderMap[member.id] || '';
+                        const childrenCount = childrenCountMap[member.id] || '';
+
                         treeHTML += `
-                            <div class="tree-node ${genClass}" onclick="showMemberDetails(${member.id})" data-member-id="${member.id}" data-generation="${gen}" data-father="${member.father || 0}">
-                                <button class="highlight-btn" onclick="event.stopPropagation(); highlightMember(${member.id});">高亮</button>
+                            <div class="tree-node ${genClass}${femaleClass}" onclick="showMemberDetails(${member.id})" data-member-id="${member.id}" data-generation="${gen}" data-father="${member.father || 0}">
+                                <button class="highlight-btn" onclick="event.stopPropagation(); toggleHighlight(${member.id});">高亮</button>
+                                ${siblingOrder ? `<div class="sibling-order">${siblingOrder}</div>` : ''}
                                 <div class="name">${member.name}</div>
-                                <div class="generation">第${member.generation}代</div>
-                                <div class="years">${member.birthYear}-${member.deathYear || '至今'}</div>
+                                <div class="clan-name"${!clanName ? ' style="visibility:hidden;"' : ''}>${clanName || '&nbsp;'}</div>
+                                ${childrenCount ? `<div class="children-count">${childrenCount}</div>` : ''}
                             </div>
                         `;
                     });
@@ -621,7 +753,7 @@
             }, 200);
         }
 
-        // 绘制连接线 - 从每个成员框底部中央伸出
+        // 绘制连接线 - 从每个成员框底部中央伸出，按代分组错开间距
         function drawConnections() {
             // 获取或创建连接线容器
             const canvas = document.getElementById('treeCanvas');
@@ -639,8 +771,30 @@
 
             // 按父亲分组绘制连接线
             const fatherGroups = {};
+            const isFemaleConn = (id) => familyData.femaleIds && familyData.femaleIds.includes(id);
+            // 计算排除集合（女性的所有后代，不排除女性本身），与renderTree一致
+            const connExcluded = new Set();
+            familyData.members.forEach(m => {
+                if (isFemaleConn(m.id) && m.children) {
+                    m.children.forEach(cid => connExcluded.add(cid));
+                }
+            });
+            let connChanged = true;
+            while (connChanged) {
+                connChanged = false;
+                familyData.members.forEach(m => {
+                    if (!connExcluded.has(m.id) && m.father && connExcluded.has(m.father)) {
+                        connExcluded.add(m.id);
+                        connChanged = true;
+                    }
+                });
+            }
             familyData.members.forEach(member => {
                 if (member.father) {
+                    // 排除女性的所有后代
+                    if (connExcluded.has(member.id)) return;
+                    // 隐藏女性模式下额外跳过女性本身
+                    if (hideFemale && isFemaleConn(member.id)) return;
                     if (!fatherGroups[member.father]) {
                         fatherGroups[member.father] = [];
                     }
@@ -648,7 +802,54 @@
                 }
             });
 
-            // 为每个父亲的子女排序
+            // 按代分组父亲，同一代的父亲放在一起
+            const fatherByGeneration = {};
+            Object.keys(fatherGroups).forEach(fatherId => {
+                const father = familyData.members.find(m => m.id === parseInt(fatherId));
+                if (father) {
+                    const gen = father.generation;
+                    if (!fatherByGeneration[gen]) {
+                        fatherByGeneration[gen] = [];
+                    }
+                    fatherByGeneration[gen].push(parseInt(fatherId));
+                }
+            });
+
+            // 为每个代的父亲按x坐标排序，并分配偏移
+            const fatherOffsets = {};
+            Object.keys(fatherByGeneration).forEach(gen => {
+                // 按x坐标排序该代的父亲
+                const fathers = fatherByGeneration[gen];
+                const fatherNodes = fathers.map(id => ({
+                    id: id,
+                    node: document.querySelector(`.tree-node[data-member-id="${id}"]`)
+                })).filter(item => item.node);
+
+                fatherNodes.sort((a, b) => {
+                    const rectA = a.node.getBoundingClientRect();
+                    const rectB = b.node.getBoundingClientRect();
+                    return rectA.left - rectB.left;
+                });
+
+                // 为每个父亲分配偏移：中间偏下两侧偏上，左侧中间额外偏下打破对称
+                const totalFathers = fatherNodes.length;
+                fatherNodes.forEach((item, index) => {
+                    const centerDist = Math.abs(index - (totalFathers - 1) / 2);
+                    const maxDist = (totalFathers - 1) / 2;
+                    const mainOffset = (maxDist - centerDist) * 8;
+                    // 偶数个时，左侧中间父亲额外偏下8px，使中间两个错开
+                    let extraOffset = 0;
+                    if (totalFathers % 2 === 0) {
+                        const leftCenter = Math.floor((totalFathers - 1) / 2);
+                        if (index === leftCenter) {
+                            extraOffset = 8;
+                        }
+                    }
+                    fatherOffsets[item.id] = mainOffset + extraOffset;
+                });
+            });
+
+            // 为每个父亲的子女排序并绘制连接线
             Object.keys(fatherGroups).forEach(fatherId => {
                 const children = fatherGroups[fatherId];
                 const childNodes = children.map(id => document.querySelector(`.tree-node[data-member-id="${id}"]`)).filter(node => node);
@@ -685,18 +886,18 @@
                 const lastChildX = lastChildRect.left - canvasRect.left + lastChildRect.width / 2;
                 const childY = firstChildRect.top - canvasRect.top;
 
-                // 连接线的起始位置（父节点底部下方15px）
-                const lineStartY = parentY + 15;
+                // 连接线的起始位置（紧贴父节点底部，无空白）
+                const lineStartY = parentY;
 
-                // 连接线的中间位置（垂直居中）
-                const midY = (lineStartY + childY) / 2;
+                // 连接线的中间位置（应用垂直偏移，避免交叉）
+                const midY = (lineStartY + childY) / 2 + (fatherOffsets[parseInt(fatherId)] || 0);
 
                 // 1. 从父节点底部向下到中间位置的垂直线
                 const verticalLine1 = document.createElement('div');
                 verticalLine1.className = 'connection-line';
-                verticalLine1.style.left = `${parentX - 1}px`;
+                verticalLine1.style.left = `${parentX - 1.5}px`;
                 verticalLine1.style.top = `${lineStartY}px`;
-                verticalLine1.style.width = '2px';
+                verticalLine1.style.width = '3px';
                 verticalLine1.style.height = `${midY - lineStartY}px`;
                 verticalLine1.dataset.fatherId = fatherId;
                 linesContainer.appendChild(verticalLine1);
@@ -705,9 +906,9 @@
                 const horizontalLine1 = document.createElement('div');
                 horizontalLine1.className = 'connection-line';
                 horizontalLine1.style.left = `${Math.min(parentX, firstChildX)}px`;
-                horizontalLine1.style.top = `${midY - 1}px`;
+                horizontalLine1.style.top = `${midY - 1.5}px`;
                 horizontalLine1.style.width = `${Math.abs(firstChildX - parentX)}px`;
-                horizontalLine1.style.height = '2px';
+                horizontalLine1.style.height = '3px';
                 horizontalLine1.dataset.fatherId = fatherId;
                 linesContainer.appendChild(horizontalLine1);
 
@@ -715,9 +916,9 @@
                 const horizontalLine2 = document.createElement('div');
                 horizontalLine2.className = 'connection-line';
                 horizontalLine2.style.left = `${Math.min(firstChildX, lastChildX)}px`;
-                horizontalLine2.style.top = `${midY - 1}px`;
+                horizontalLine2.style.top = `${midY - 1.5}px`;
                 horizontalLine2.style.width = `${Math.abs(lastChildX - firstChildX)}px`;
-                horizontalLine2.style.height = '2px';
+                horizontalLine2.style.height = '3px';
                 horizontalLine2.dataset.fatherId = fatherId;
                 linesContainer.appendChild(horizontalLine2);
 
@@ -728,9 +929,9 @@
 
                     const childVerticalLine = document.createElement('div');
                     childVerticalLine.className = 'connection-line';
-                    childVerticalLine.style.left = `${childX - 1}px`;
+                    childVerticalLine.style.left = `${childX - 1.5}px`;
                     childVerticalLine.style.top = `${midY}px`;
-                    childVerticalLine.style.width = '2px';
+                    childVerticalLine.style.width = '3px';
                     childVerticalLine.style.height = `${childY - midY}px`;
                     childVerticalLine.dataset.fatherId = fatherId;
                     linesContainer.appendChild(childVerticalLine);
@@ -804,7 +1005,22 @@
                 const newScale = Math.max(0.3, Math.min(2, scale + delta));
 
                 if (newScale !== scale) {
+                    // 获取鼠标在容器中的位置
+                    const containerRect = container.getBoundingClientRect();
+                    const mouseX = e.clientX - containerRect.left;
+                    const mouseY = e.clientY - containerRect.top;
+
+                    // 计算鼠标在画布坐标系中的位置（缩放前）
+                    const canvasX = (mouseX - translateX) / scale;
+                    const canvasY = (mouseY - translateY) / scale;
+
+                    // 更新缩放
                     scale = newScale;
+
+                    // 调整平移，使鼠标所指的画布点保持不变
+                    translateX = mouseX - canvasX * scale;
+                    translateY = mouseY - canvasY * scale;
+
                     updateTransform();
                     updateZoomInfo();
                 }
@@ -851,6 +1067,23 @@
             translateX = (containerRect.width - treeRect.width) / 2;
             translateY = (containerRect.height - treeRect.height) / 2;
             updateTransform();
+        }
+
+        // 切换显示/隐藏女性
+        function toggleFemale() {
+            hideFemale = !hideFemale;
+            const btn = document.getElementById('toggleFemaleBtn');
+            if (hideFemale) {
+                btn.textContent = '显示女性';
+                btn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)';
+                btn.style.borderColor = '#388E3C';
+            } else {
+                btn.textContent = '隐藏女性';
+                btn.style.background = 'linear-gradient(135deg, #E91E63 0%, #F06292 100%)';
+                btn.style.borderColor = '#C2185B';
+            }
+            renderTree();
+            initTooltip();
         }
 
         function resetView() {
@@ -978,7 +1211,49 @@
                 line.classList.remove('line-highlighted', 'line-dimmed');
             });
 
-            console.log('清除高亮后连接线数量:', document.querySelectorAll('.connection-line').length);
+            currentHighlightedId = null;
+            updateAllHighlightBtns();
+        }
+
+        // 刷新族谱树
+        function refreshTree() {
+            // 清除旧的连接线
+            const oldLines = document.querySelector('.connection-lines');
+            if (oldLines) oldLines.remove();
+            // 重新渲染
+            renderTree();
+            setTimeout(() => {
+                initTooltip();
+                drawConnections();
+            }, 300);
+        }
+
+        // 切换高亮/取消高亮
+        let currentHighlightedId = null;
+        function toggleHighlight(memberId) {
+            if (currentHighlightedId === memberId) {
+                // 当前已高亮此成员，取消高亮
+                clearHighlight();
+                currentHighlightedId = null;
+                updateAllHighlightBtns();
+            } else {
+                // 高亮此成员
+                highlightMember(memberId);
+                currentHighlightedId = memberId;
+                updateAllHighlightBtns();
+            }
+        }
+
+        // 更新所有高亮按钮的文本
+        function updateAllHighlightBtns() {
+            document.querySelectorAll('.highlight-btn').forEach(btn => {
+                const node = btn.closest('.tree-node');
+                if (node && currentHighlightedId && parseInt(node.dataset.memberId) === currentHighlightedId) {
+                    btn.textContent = '取消高亮';
+                } else {
+                    btn.textContent = '高亮';
+                }
+            });
         }
 
         // 显示成员详情
@@ -1005,10 +1280,16 @@
                 }
             }
 
+            const genName = familyData.generationNames ? (familyData.generationNames[member.generation] || '') : '';
+            const clanName = familyData.clanNames ? (familyData.clanNames[member.id] || '') : '';
+            const isFemaleMember = familyData.femaleIds && familyData.femaleIds.includes(member.id);
+
             modalContent.innerHTML = `
                 <h2 style="color: #8B4513; margin-bottom: 20px; font-family: 'KaiTi', 'SimSun', serif;">${member.name}</h2>
                 <div style="line-height: 2; font-family: 'KaiTi', 'SimSun', serif;">
-                    <p><strong>世代：</strong>第${member.generation}代</p>
+                    <p><strong>世代：</strong>第${member.generation}世（${genName}）</p>
+                    ${clanName ? `<p><strong>祠堂名：</strong>${clanName}</p>` : ''}
+                    <p><strong>性别：</strong>${isFemaleMember ? '女' : '男'}</p>
                     <p><strong>生卒年：</strong>${member.birthYear} - ${member.deathYear || '至今'}</p>
                     <p><strong>出生地：</strong>${member.birthPlace}</p>
                     <p><strong>职业：</strong>${member.occupation}</p>
@@ -1023,8 +1304,30 @@
                             ${member.achievements.map(achievement => `<li>${achievement}</li>`).join('')}
                         </ul>
                     ` : ''}
+
+                    ${member.tomb ? `
+                        <div style="margin-top: 25px; padding: 20px; background: #f9f9f9; border-radius: 10px; border-left: 4px solid #8B4513;">
+                            <p style="margin-bottom: 10px;"><strong>🏛️ 墓地信息</strong></p>
+                            <p><strong>地址：</strong>${member.tomb.address}</p>
+                            <p><strong>经纬度：</strong>${member.tomb.lat}, ${member.tomb.lng}</p>
+                            <div style="margin-top: 10px; border-radius: 8px; overflow: hidden;">
+                                <img src="${member.tomb.image}" alt="墓地" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'">
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
+
+            // admin编辑/删除按钮
+            const isAdminUser = typeof authSystem !== 'undefined' && authSystem.isAdmin && authSystem.isAdmin();
+            if (isAdminUser) {
+                modalContent.innerHTML += `
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #DAA520; display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="showEditMemberModal(${member.id})" style="padding: 8px 20px; background: rgba(56,142,60,0.8); color: #FFF8DC; border: 1.5px solid #2E7D32; border-radius: 15px; cursor: pointer; font-family: 'KaiTi','SimSun',serif; font-weight: bold; font-size: 14px;">编辑成员</button>
+                        <button onclick="deleteMember(${member.id})" style="padding: 8px 20px; background: rgba(211,47,47,0.8); color: #FFF8DC; border: 1.5px solid #C62828; border-radius: 15px; cursor: pointer; font-family: 'KaiTi','SimSun',serif; font-weight: bold; font-size: 14px;">删除成员</button>
+                    </div>
+                `;
+            }
 
             modal.style.display = 'block';
         }
@@ -1053,9 +1356,11 @@
                     const member = familyData.members.find(m => m.id === memberId);
 
                     if (member) {
+                        const genName = familyData.generationNames ? (familyData.generationNames[member.generation] || '') : '';
+                        const clanName = familyData.clanNames ? (familyData.clanNames[member.id] || '') : '';
                         tooltip.innerHTML = `
                             <strong>${member.name}</strong><br>
-                            第${member.generation}代<br>
+                            ${genName}${clanName ? ' · ' + clanName : ''}<br>
                             ${member.occupation}<br>
                             ${member.birthYear}-${member.deathYear || '至今'}
                         `;
@@ -1089,6 +1394,366 @@
                 drawConnections();
             }, 100);
         });
+
+        // ===== Admin 编辑功能 =====
+        // 初始化admin控件显示
+        function initAdminControls() {
+            const isAdminUser = typeof authSystem !== 'undefined' && authSystem.isAdmin && authSystem.isAdmin();
+            const adminCtrl = document.getElementById('adminControls');
+            if (adminCtrl) {
+                adminCtrl.style.display = isAdminUser ? 'flex' : 'none';
+            }
+        }
+        // 页面加载后初始化
+        setTimeout(initAdminControls, 200);
+
+        // 编辑辈分名称弹窗
+        function showEditGenNamesModal() {
+            const modal = document.getElementById('memberModal');
+            const modalContent = document.getElementById('modalContent');
+            if (!familyData.generationNames) familyData.generationNames = {};
+
+            // 获取所有存在的世代
+            const allGens = [...new Set(familyData.members.map(m => m.generation))].sort((a, b) => a - b);
+
+            let fieldsHTML = '';
+            allGens.forEach(gen => {
+                const currentName = familyData.generationNames[gen] || '';
+                fieldsHTML += `<p><label>第${gen}世辈分名：<input id="genName_${gen}" type="text" value="${currentName}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;" placeholder="如：德字辈"></label></p>`;
+            });
+
+            modalContent.innerHTML = `
+                <h2 style="color: #8B4513; margin-bottom: 20px; font-family: 'KaiTi','SimSun',serif;">编辑辈分名称</h2>
+                <div style="line-height: 2.2; font-family: 'KaiTi','SimSun',serif;">
+                    ${fieldsHTML}
+                </div>
+                <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+                    <button onclick="saveGenNames()" style="padding:8px 24px; background:rgba(56,142,60,0.8); color:#FFF8DC; border:1.5px solid #2E7D32; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">保存</button>
+                    <button onclick="closeModal()" style="padding:8px 24px; background:rgba(158,158,158,0.8); color:#FFF8DC; border:1.5px solid #757575; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">取消</button>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        // 保存辈分名称
+        function saveGenNames() {
+            if (!familyData.generationNames) familyData.generationNames = {};
+            const allGens = [...new Set(familyData.members.map(m => m.generation))].sort((a, b) => a - b);
+            allGens.forEach(gen => {
+                const input = document.getElementById(`genName_${gen}`);
+                if (input) {
+                    familyData.generationNames[gen] = input.value.trim();
+                }
+            });
+            // 保存到localStorage
+            try {
+                localStorage.setItem('familyTreeGenNames', JSON.stringify(familyData.generationNames));
+            } catch(e) {}
+            closeModal();
+            refreshTree();
+        }
+
+        // 加载自定义辈分名称
+        function loadCustomGenNames() {
+            const customData = localStorage.getItem('familyTreeGenNames');
+            if (customData) {
+                try {
+                    familyData.generationNames = JSON.parse(customData);
+                } catch(e) {}
+            }
+        }
+        loadCustomGenNames();
+
+        // 获取所有父亲选项（用于下拉框）
+        function getFatherOptions(selectedFatherId) {
+            const isFemaleFn = (id) => familyData.femaleIds && familyData.femaleIds.includes(id);
+            let options = '<option value="0">无（第一世）</option>';
+            familyData.members.forEach(m => {
+                if (!isFemaleFn(m.id)) {
+                    const selected = m.id === selectedFatherId ? ' selected' : '';
+                    options += `<option value="${m.id}"${selected}>${m.name}（第${m.generation}世）</option>`;
+                }
+            });
+            return options;
+        }
+
+        // 显示添加成员弹窗
+        function showAddMemberModal() {
+            const modal = document.getElementById('memberModal');
+            const modalContent = document.getElementById('modalContent');
+            const maxId = Math.max(...familyData.members.map(m => m.id));
+            modalContent.innerHTML = `
+                <h2 style="color: #8B4513; margin-bottom: 20px; font-family: 'KaiTi','SimSun',serif;">添加家族成员</h2>
+                <div style="line-height: 2.2; font-family: 'KaiTi','SimSun',serif;">
+                    <p><label>姓名：<input id="editName" type="text" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>祠堂名：<input id="editClanName" type="text" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;" placeholder="如：德厚"></label></p>
+                    <p><label>性别：<select id="editGender" style="padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"><option value="male">男</option><option value="female">女</option></select></label></p>
+                    <p><label>父亲：<select id="editFather" style="padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;">${getFatherOptions(0)}</select></label></p>
+                    <p><label>第几世：<input id="editGeneration" type="number" min="1" style="width:60px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;" placeholder="自动"></label><small style="color:#999;">留空则根据父亲自动计算</small></p>
+                    <p><label>出生年份：<input id="editBirthYear" type="text" style="width:80px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;" placeholder="如：1990"></label></p>
+                    <p><label>去世年份：<input id="editDeathYear" type="text" style="width:80px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;" placeholder="留空表示在世"></label></p>
+                    <p><label>出生地：<input id="editBirthPlace" type="text" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>职业：<input id="editOccupation" type="text" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>配偶：<input id="editSpouse" type="text" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>简介：<textarea id="editBio" rows="3" style="width:90%;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></textarea></label></p>
+                </div>
+                <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+                    <button onclick="saveNewMember()" style="padding:8px 24px; background:rgba(56,142,60,0.8); color:#FFF8DC; border:1.5px solid #2E7D32; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">保存</button>
+                    <button onclick="closeModal()" style="padding:8px 24px; background:rgba(158,158,158,0.8); color:#FFF8DC; border:1.5px solid #757575; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">取消</button>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        // 保存新成员
+        function saveNewMember() {
+            const name = document.getElementById('editName').value.trim();
+            if (!name) { alert('请输入姓名'); return; }
+            const gender = document.getElementById('editGender').value;
+            const fatherId = parseInt(document.getElementById('editFather').value);
+            const birthYear = document.getElementById('editBirthYear').value.trim();
+            const deathYear = document.getElementById('editDeathYear').value.trim();
+            const birthPlace = document.getElementById('editBirthPlace').value.trim();
+            const occupation = document.getElementById('editOccupation').value.trim();
+            const spouse = document.getElementById('editSpouse').value.trim();
+            const bio = document.getElementById('editBio').value.trim();
+
+            const maxId = Math.max(...familyData.members.map(m => m.id));
+            const father = fatherId > 0 ? familyData.members.find(m => m.id === fatherId) : null;
+            const autoGeneration = father ? father.generation + 1 : 1;
+            const manualGeneration = document.getElementById('editGeneration').value.trim();
+            const generation = manualGeneration ? parseInt(manualGeneration) : autoGeneration;
+            const clanNameInput = document.getElementById('editClanName').value.trim();
+
+            const newMember = {
+                id: maxId + 1,
+                name: name,
+                generation: generation,
+                birthYear: birthYear || '未知',
+                deathYear: deathYear || '',
+                birthPlace: birthPlace || '未知',
+                occupation: occupation || '未知',
+                photo: '',
+                bio: bio || '暂无简介',
+                achievements: [],
+                spouse: spouse || '',
+                children: [],
+                parents: fatherId > 0 ? [fatherId] : [],
+                father: fatherId > 0 ? fatherId : null
+            };
+
+            familyData.members.push(newMember);
+
+            // 更新父亲的children数组
+            if (fatherId > 0 && father) {
+                if (!father.children) father.children = [];
+                father.children.push(newMember.id);
+            }
+
+            // 更新女性ID列表
+            if (gender === 'female') {
+                if (!familyData.femaleIds) familyData.femaleIds = [];
+                familyData.femaleIds.push(newMember.id);
+            }
+
+            // 更新祠堂名
+            if (!familyData.clanNames) familyData.clanNames = {};
+            if (clanNameInput) {
+                familyData.clanNames[newMember.id] = clanNameInput;
+            } else {
+                const genName = familyData.generationNames ? familyData.generationNames[generation] : '';
+                const clanChar = genName ? genName.charAt(0) : '';
+                familyData.clanNames[newMember.id] = clanChar + name.charAt(name.length - 1);
+            }
+
+            // 保存到localStorage
+            try {
+                localStorage.setItem('familyTreeMembers', JSON.stringify(familyData.members));
+                localStorage.setItem('familyTreeFemaleIds', JSON.stringify(familyData.femaleIds));
+                localStorage.setItem('familyTreeClanNames', JSON.stringify(familyData.clanNames));
+            } catch(e) {}
+
+            closeModal();
+            refreshTree();
+        }
+
+        // 显示编辑成员弹窗
+        function showEditMemberModal(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return;
+            const modal = document.getElementById('memberModal');
+            const modalContent = document.getElementById('modalContent');
+            const isFemaleM = familyData.femaleIds && familyData.femaleIds.includes(member.id);
+            modalContent.innerHTML = `
+                <h2 style="color: #8B4513; margin-bottom: 20px; font-family: 'KaiTi','SimSun',serif;">编辑成员：${member.name}</h2>
+                <div style="line-height: 2.2; font-family: 'KaiTi','SimSun',serif;">
+                    <p><label>姓名：<input id="editName" type="text" value="${member.name}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>祠堂名：<input id="editClanName" type="text" value="${familyData.clanNames ? (familyData.clanNames[member.id] || '') : ''}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>性别：<select id="editGender" style="padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"><option value="male"${!isFemaleM?' selected':''}>男</option><option value="female"${isFemaleM?' selected':''}>女</option></select></label></p>
+                    <p><label>父亲：<select id="editFather" style="padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;">${getFatherOptions(member.father||0)}</select></label></p>
+                    <p><label>第几世：<input id="editGeneration" type="number" min="1" value="${member.generation}" style="width:60px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;"></label></p>
+                    <p><label>出生年份：<input id="editBirthYear" type="text" value="${member.birthYear}" style="width:80px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;"></label></p>
+                    <p><label>去世年份：<input id="editDeathYear" type="text" value="${member.deathYear||''}" style="width:80px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;"></label></p>
+                    <p><label>出生地：<input id="editBirthPlace" type="text" value="${member.birthPlace}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>职业：<input id="editOccupation" type="text" value="${member.occupation}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>配偶：<input id="editSpouse" type="text" value="${member.spouse||''}" style="width:150px;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;"></label></p>
+                    <p><label>简介：<textarea id="editBio" rows="3" style="width:90%;padding:4px 8px;border:1.5px solid #DAA520;border-radius:8px;font-family:'KaiTi',serif;">${member.bio||''}</textarea></label></p>
+                </div>
+                <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+                    <button onclick="saveEditMember(${memberId})" style="padding:8px 24px; background:rgba(56,142,60,0.8); color:#FFF8DC; border:1.5px solid #2E7D32; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">保存</button>
+                    <button onclick="closeModal()" style="padding:8px 24px; background:rgba(158,158,158,0.8); color:#FFF8DC; border:1.5px solid #757575; border-radius:15px; cursor:pointer; font-family:'KaiTi',serif; font-weight:bold; font-size:14px;">取消</button>
+                </div>
+            `;
+            modal.style.display = 'block';
+        }
+
+        // 保存编辑成员
+        function saveEditMember(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return;
+            member.name = document.getElementById('editName').value.trim() || member.name;
+            member.birthYear = document.getElementById('editBirthYear').value.trim() || member.birthYear;
+            member.deathYear = document.getElementById('editDeathYear').value.trim() || '';
+            member.birthPlace = document.getElementById('editBirthPlace').value.trim() || member.birthPlace;
+            member.occupation = document.getElementById('editOccupation').value.trim() || member.occupation;
+            member.spouse = document.getElementById('editSpouse').value.trim() || '';
+            member.bio = document.getElementById('editBio').value.trim() || member.bio;
+
+            // 修改第几世
+            const manualGeneration = document.getElementById('editGeneration').value.trim();
+            if (manualGeneration) {
+                member.generation = parseInt(manualGeneration) || member.generation;
+            }
+
+            // 修改祠堂名（空输入则删除，族谱图中不显示但方框大小不变）
+            const clanNameInput = document.getElementById('editClanName').value.trim();
+            if (!familyData.clanNames) familyData.clanNames = {};
+            if (clanNameInput) {
+                familyData.clanNames[memberId] = clanNameInput;
+            } else {
+                delete familyData.clanNames[memberId];
+            }
+
+            const newFatherId = parseInt(document.getElementById('editFather').value);
+            if (newFatherId !== (member.father || 0)) {
+                // 从旧父亲的children中移除
+                if (member.father) {
+                    const oldFather = familyData.members.find(m => m.id === member.father);
+                    if (oldFather && oldFather.children) {
+                        oldFather.children = oldFather.children.filter(cid => cid !== memberId);
+                    }
+                }
+                // 添加到新父亲的children
+                if (newFatherId > 0) {
+                    const newFather = familyData.members.find(m => m.id === newFatherId);
+                    if (newFather) {
+                        if (!newFather.children) newFather.children = [];
+                        newFather.children.push(memberId);
+                    }
+                    member.father = newFatherId;
+                    member.generation = newFather.generation + 1;
+                } else {
+                    member.father = null;
+                    member.generation = 1;
+                }
+            }
+
+            // 更新性别
+            const newGender = document.getElementById('editGender').value;
+            if (familyData.femaleIds) {
+                if (newGender === 'female' && !familyData.femaleIds.includes(memberId)) {
+                    familyData.femaleIds.push(memberId);
+                } else if (newGender === 'male' && familyData.femaleIds.includes(memberId)) {
+                    familyData.femaleIds = familyData.femaleIds.filter(id => id !== memberId);
+                }
+            }
+
+            // 保存到localStorage
+            try {
+                localStorage.setItem('familyTreeMembers', JSON.stringify(familyData.members));
+                localStorage.setItem('familyTreeFemaleIds', JSON.stringify(familyData.femaleIds));
+                localStorage.setItem('familyTreeClanNames', JSON.stringify(familyData.clanNames));
+            } catch(e) {}
+
+            closeModal();
+            refreshTree();
+        }
+
+        // 删除成员
+        function deleteMember(memberId) {
+            const member = familyData.members.find(m => m.id === memberId);
+            if (!member) return;
+            if (!confirm(`确定要删除成员"${member.name}"吗？其子女的关联也会被清除。`)) return;
+
+            // 从父亲的children中移除
+            if (member.father) {
+                const father = familyData.members.find(m => m.id === member.father);
+                if (father && father.children) {
+                    father.children = father.children.filter(cid => cid !== memberId);
+                }
+            }
+
+            // 清除子女的father引用
+            if (member.children) {
+                member.children.forEach(cid => {
+                    const child = familyData.members.find(m => m.id === cid);
+                    if (child) child.father = null;
+                });
+            }
+
+            // 从femaleIds中移除
+            if (familyData.femaleIds) {
+                familyData.femaleIds = familyData.femaleIds.filter(id => id !== memberId);
+            }
+            // 从clanNames中移除
+            if (familyData.clanNames) {
+                delete familyData.clanNames[memberId];
+            }
+
+            // 从members中移除
+            familyData.members = familyData.members.filter(m => m.id !== memberId);
+
+            // 保存到localStorage
+            try {
+                localStorage.setItem('familyTreeMembers', JSON.stringify(familyData.members));
+                localStorage.setItem('familyTreeFemaleIds', JSON.stringify(familyData.femaleIds));
+                localStorage.setItem('familyTreeClanNames', JSON.stringify(familyData.clanNames));
+            } catch(e) {}
+
+            closeModal();
+            refreshTree();
+        }
+
+        // 从localStorage加载自定义成员数据
+        function loadCustomMemberData() {
+            try {
+                const customMembers = localStorage.getItem('familyTreeMembers');
+                if (customMembers) {
+                    const parsed = JSON.parse(customMembers);
+                    if (parsed.length > familyData.members.length) {
+                        familyData.members = parsed;
+                    }
+                }
+                const customFemaleIds = localStorage.getItem('familyTreeFemaleIds');
+                if (customFemaleIds) familyData.femaleIds = JSON.parse(customFemaleIds);
+                const customClanNames = localStorage.getItem('familyTreeClanNames');
+                if (customClanNames) familyData.clanNames = JSON.parse(customClanNames);
+            } catch(e) {}
+        }
+        loadCustomMemberData();
+    </script>
+
+    <script>
+    // 强制横屏：竖屏时显示提示遮罩
+    (function() {
+        var style = document.createElement('style');
+        style.textContent = '@media screen and (orientation: portrait) { #landscapeOverlay { display: flex !important; } } #landscapeOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74,55,40,0.97); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; } #landscapeOverlay .rotate-icon { font-size: 4rem; animation: rotateHint 2s ease-in-out infinite; margin-bottom: 20px; } @keyframes rotateHint { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } } #landscapeOverlay .hint-text { color: #FFF8DC; font-size: 1.3rem; font-family: KaiTi,SimSun,serif; letter-spacing: 3px; }';
+        document.head.appendChild(style);
+        var overlay = document.createElement('div');
+        overlay.id = 'landscapeOverlay';
+        overlay.innerHTML = '<div class="rotate-icon">&#128241;</div><div class="hint-text">请横屏查看以获得最佳体验</div>';
+        document.body.appendChild(overlay);
+    })();
     </script>
 </body>
 </html>
