@@ -121,7 +121,35 @@
         .countdown-days { color: #A0522D; font-size: 0.88rem; font-weight: bold; font-family: 'KaiTi','SimSun',serif; }
         .countdown-days .num { font-size: 1.1rem; color: #8B4513; }
 
-        
+        /* Admin 账号管理 */
+        .admin-user-section { background: rgba(255,250,235,0.97); border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .admin-user-section h3 { color: #5D3A1A; font-family: 'KaiTi','SimSun',serif; font-size: 1.05rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .admin-user-table { width: 100%; border-collapse: collapse; }
+        .admin-user-table th { background: rgba(139,69,19,0.08); color: #5D3A1A; font-size: 0.82rem; padding: 8px 10px; text-align: left; font-family: 'KaiTi','SimSun',serif; border-bottom: 2px solid #DAA520; }
+        .admin-user-table td { padding: 8px 10px; font-size: 0.82rem; color: #3E2723; border-bottom: 1px solid rgba(218,165,32,0.15); vertical-align: middle; }
+        .admin-user-table tr:hover td { background: rgba(139,69,19,0.03); }
+        .admin-btn { padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; border: 1px solid; transition: all 0.2s; margin-right: 4px; }
+        .admin-btn-edit { background: rgba(39,174,96,0.08); color: #27ae60; border-color: rgba(39,174,96,0.3); }
+        .admin-btn-edit:hover { background: rgba(39,174,96,0.15); }
+        .admin-btn-del { background: rgba(192,57,43,0.06); color: #c0392b; border-color: rgba(192,57,43,0.25); }
+        .admin-btn-del:hover { background: rgba(192,57,43,0.12); }
+        .admin-btn-add { padding: 8px 20px; background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-top: 12px; transition: all 0.3s; }
+        .admin-btn-add:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        .admin-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
+        .admin-modal-overlay.open { display: flex; }
+        .admin-modal { background: rgba(255,250,235,0.98); border-radius: 16px; padding: 24px; width: 400px; max-width: 90vw; box-shadow: 0 8px 30px rgba(0,0,0,0.2); border: 2px solid #DAA520; }
+        .admin-modal h4 { color: #5D3A1A; font-family: 'KaiTi','SimSun',serif; font-size: 1.1rem; margin-bottom: 16px; }
+        .admin-modal label { display: block; color: #8B7355; font-size: 0.82rem; margin-bottom: 4px; margin-top: 12px; }
+        .admin-modal input { width: 100%; padding: 8px 12px; border: 1.5px solid #DAA520; border-radius: 6px; font-size: 0.88rem; background: rgba(255,255,255,0.8); outline: none; }
+        .admin-modal input:focus { border-color: #8B4513; }
+        .admin-modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+        .admin-modal-btns button { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; border: none; transition: all 0.2s; }
+        .admin-modal-save { background: linear-gradient(135deg,#8B4513,#A0522D); color: #FFF8DC; }
+        .admin-modal-cancel { background: rgba(139,69,19,0.06); color: #8B4513; border: 1px solid rgba(139,69,19,0.2) !important; }
+        .admin-msg { font-size: 0.82rem; margin-top: 8px; padding: 6px 10px; border-radius: 6px; }
+        .admin-msg.ok { background: rgba(39,174,96,0.1); color: #27ae60; }
+        .admin-msg.err { background: rgba(192,57,43,0.08); color: #c0392b; }
+        .admin-pw-mask { font-family: monospace; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -189,6 +217,7 @@
                         </div>
                     </div>
                     </div>
+                    <div id="adminUserSection"></div>
                     <div class="posts-section">
                         <h3>我的动态</h3>
                         <div class="post-composer">
@@ -219,6 +248,21 @@
             </div>
         </div>
     </main>
+    <!-- Admin 账号管理模态框 -->
+    <div class="admin-modal-overlay" id="adminModalOverlay" onclick="if(event.target===this)closeAdminModal()">
+        <div class="admin-modal">
+            <h4 id="adminModalTitle">编辑用户</h4>
+            <label>用户名</label>
+            <input type="text" id="adminModalName" placeholder="输入用户名">
+            <label>密码</label>
+            <input type="text" id="adminModalPw" placeholder="输入新密码">
+            <div id="adminModalMsg"></div>
+            <div class="admin-modal-btns">
+                <button class="admin-modal-cancel" onclick="closeAdminModal()">取消</button>
+                <button class="admin-modal-save" onclick="saveAdminModal()">保存</button>
+            </div>
+        </div>
+    </div>
     <div class="img-preview" id="imgPreview" onclick="this.classList.remove('visible')"><img id="previewImg" src=""></div>
     <footer><div class="container"><p>&copy; 2026 家族族谱网站. 保留所有权利.</p></div></footer>
     <script src="data.js"></script>
@@ -703,19 +747,107 @@
             }).join('') + '</div>';
         }
         renderCountdown();
-    </script>
 
-    <script>
-    // 强制横屏：竖屏时显示提示遮罩
-    (function() {
-        var style = document.createElement('style');
-        style.textContent = '@media screen and (orientation: portrait) { #landscapeOverlay { display: flex !important; } } #landscapeOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74,55,40,0.97); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; } #landscapeOverlay .rotate-icon { font-size: 4rem; animation: rotateHint 2s ease-in-out infinite; margin-bottom: 20px; } @keyframes rotateHint { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } } #landscapeOverlay .hint-text { color: #FFF8DC; font-size: 1.3rem; font-family: KaiTi,SimSun,serif; letter-spacing: 3px; }';
-        document.head.appendChild(style);
-        var overlay = document.createElement('div');
-        overlay.id = 'landscapeOverlay';
-        overlay.innerHTML = '<div class="rotate-icon">&#128241;</div><div class="hint-text">请横屏查看以获得最佳体验</div>';
-        document.body.appendChild(overlay);
-    })();
+        // ===== Admin 账号管理 =====
+        let adminModalMode = ''; // 'edit' | 'add'
+        let adminEditUser = '';
+
+        function renderAdminUsers() {
+            const container = document.getElementById('adminUserSection');
+            if (!authSystem.isAdmin()) { container.innerHTML = ''; return; }
+
+            const users = authSystem.getAllUsers();
+            let rows = users.map(u => {
+                const pwMask = '*'.repeat(Math.min(u.password.length, 8));
+                const roleText = u.isAdmin ? '管理员' : (u.info.isFamily ? u.info.role : (u.info.note || u.info.role));
+                const editBtn = `<button class="admin-btn admin-btn-edit" onclick="openEditUser('${u.username}')">编辑</button>`;
+                const delBtn = u.isAdmin ? '' : `<button class="admin-btn admin-btn-del" onclick="deleteUser('${u.username}')">删除</button>`;
+                return `<tr>
+                    <td style="font-weight:bold;font-family:'KaiTi','SimSun',serif;">${u.username}</td>
+                    <td class="admin-pw-mask">${pwMask}</td>
+                    <td>${roleText}</td>
+                    <td>${editBtn}${delBtn}</td>
+                </tr>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="admin-user-section">
+                    <h3>&#128272; 账号管理</h3>
+                    <table class="admin-user-table">
+                        <thead><tr><th>用户名</th><th>密码</th><th>角色</th><th>操作</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <button class="admin-btn-add" onclick="openAddUser()">+ 添加用户</button>
+                </div>`;
+        }
+
+        function openEditUser(username) {
+            adminModalMode = 'edit';
+            adminEditUser = username;
+            const users = authSystem.getAllUsers();
+            const u = users.find(x => x.username === username);
+            if (!u) return;
+            document.getElementById('adminModalTitle').textContent = '编辑用户：' + username;
+            document.getElementById('adminModalName').value = username;
+            document.getElementById('adminModalPw').value = u.password;
+            document.getElementById('adminModalName').readOnly = (username === 'admin');
+            document.getElementById('adminModalMsg').innerHTML = '';
+            document.getElementById('adminModalOverlay').classList.add('open');
+        }
+
+        function openAddUser() {
+            adminModalMode = 'add';
+            adminEditUser = '';
+            document.getElementById('adminModalTitle').textContent = '添加新用户';
+            document.getElementById('adminModalName').value = '';
+            document.getElementById('adminModalPw').value = '';
+            document.getElementById('adminModalName').readOnly = false;
+            document.getElementById('adminModalMsg').innerHTML = '';
+            document.getElementById('adminModalOverlay').classList.add('open');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModalOverlay').classList.remove('open');
+        }
+
+        function saveAdminModal() {
+            const name = document.getElementById('adminModalName').value.trim();
+            const pw = document.getElementById('adminModalPw').value.trim();
+            const msgEl = document.getElementById('adminModalMsg');
+
+            if (adminModalMode === 'add') {
+                if (!name || !pw) { msgEl.innerHTML = '<div class="admin-msg err">用户名和密码不能为空</div>'; return; }
+                const res = authSystem.addUser(name, pw);
+                if (res.success) {
+                    msgEl.innerHTML = '<div class="admin-msg ok">' + res.msg + '</div>';
+                    setTimeout(() => { closeAdminModal(); renderAdminUsers(); }, 800);
+                } else {
+                    msgEl.innerHTML = '<div class="admin-msg err">' + res.msg + '</div>';
+                }
+            } else if (adminModalMode === 'edit') {
+                // 修改用户名（非admin）
+                if (name !== adminEditUser && adminEditUser !== 'admin') {
+                    const res = authSystem.renameUser(adminEditUser, name);
+                    if (!res.success) { msgEl.innerHTML = '<div class="admin-msg err">' + res.msg + '</div>'; return; }
+                }
+                // 修改密码
+                if (pw) {
+                    const targetUser = (name !== adminEditUser) ? name : adminEditUser;
+                    const res = authSystem.changeUserPassword(targetUser, pw);
+                    if (!res.success) { msgEl.innerHTML = '<div class="admin-msg err">' + res.msg + '</div>'; return; }
+                }
+                msgEl.innerHTML = '<div class="admin-msg ok">修改成功</div>';
+                setTimeout(() => { closeAdminModal(); renderAdminUsers(); authSystem.updateNavbar(); }, 800);
+            }
+        }
+
+        function deleteUser(username) {
+            if (!confirm('确定删除用户 "' + username + '" 吗？此操作不可恢复！')) return;
+            const res = authSystem.deleteUser(username);
+            if (res.success) { renderAdminUsers(); } else { alert(res.msg); }
+        }
+
+        renderAdminUsers();
     </script>
 </body>
 </html>

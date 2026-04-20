@@ -140,6 +140,107 @@ const authSystem = {
     // 获取用户头像URL（供其他模块调用）
     getUserAvatar(username) {
         return this._getAvatarFromStorage(username);
+    },
+
+    // ===== Admin 账号管理 =====
+    // 获取所有用户列表
+    getAllUsers() {
+        this.init();
+        return Object.keys(this.users).map(name => ({
+            username: name,
+            password: this.users[name],
+            isAdmin: name === 'admin',
+            info: this.getUserInfo(name)
+        }));
+    },
+
+    // 修改用户密码
+    changeUserPassword(username, newPassword) {
+        if (!this.users[username]) return { success: false, msg: '用户不存在' };
+        if (username === 'admin' && this.getCurrentUser() !== 'admin') return { success: false, msg: '不能修改管理员密码' };
+        this.users[username] = newPassword;
+        localStorage.setItem('familyUserPw_' + username, newPassword);
+        return { success: true, msg: '密码修改成功' };
+    },
+
+    // 修改用户名（重命名）
+    renameUser(oldName, newName) {
+        if (!this.users[oldName]) return { success: false, msg: '原用户不存在' };
+        if (oldName === 'admin') return { success: false, msg: '不能重命名admin账户' };
+        if (this.users[newName]) return { success: false, msg: '新用户名已存在' };
+        if (!newName.trim()) return { success: false, msg: '用户名不能为空' };
+
+        // 迁移密码
+        const pw = this.users[oldName];
+        delete this.users[oldName];
+        this.users[newName] = pw;
+
+        // 迁移localStorage中的密码
+        const savedPw = localStorage.getItem('familyUserPw_' + oldName);
+        if (savedPw) {
+            localStorage.removeItem('familyUserPw_' + oldName);
+            localStorage.setItem('familyUserPw_' + newName, savedPw);
+        }
+
+        // 迁移profile数据
+        const profileKey = 'familyProfile_' + oldName;
+        const newProfileKey = 'familyProfile_' + newName;
+        try {
+            const localData = localStorage.getItem(profileKey);
+            if (localData) {
+                localStorage.removeItem(profileKey);
+                localStorage.setItem(newProfileKey, localData);
+            }
+            const sessionData = sessionStorage.getItem(profileKey);
+            if (sessionData) {
+                sessionStorage.removeItem(profileKey);
+                sessionStorage.setItem(newProfileKey, sessionData);
+            }
+        } catch(e) {}
+
+        // 迁移externalUsers
+        if (this.externalUsers[oldName]) {
+            this.externalUsers[newName] = this.externalUsers[oldName];
+            delete this.externalUsers[oldName];
+        }
+
+        // 如果重命名的是当前登录用户，更新session
+        if (this.getCurrentUser() === oldName) {
+            sessionStorage.setItem('familyUserName', newName);
+        }
+
+        return { success: true, msg: '用户名修改成功' };
+    },
+
+    // 删除用户
+    deleteUser(username) {
+        if (!this.users[username]) return { success: false, msg: '用户不存在' };
+        if (username === 'admin') return { success: false, msg: '不能删除admin账户' };
+
+        delete this.users[username];
+        localStorage.removeItem('familyUserPw_' + username);
+
+        // 清理profile数据
+        try {
+            localStorage.removeItem('familyProfile_' + username);
+            sessionStorage.removeItem('familyProfile_' + username);
+        } catch(e) {}
+
+        // 清理externalUsers
+        delete this.externalUsers[username];
+
+        return { success: true, msg: '用户删除成功' };
+    },
+
+    // 添加新用户
+    addUser(username, password) {
+        if (this.users[username]) return { success: false, msg: '用户名已存在' };
+        if (!username.trim()) return { success: false, msg: '用户名不能为空' };
+        if (!password.trim()) return { success: false, msg: '密码不能为空' };
+
+        this.users[username] = password;
+        localStorage.setItem('familyUserPw_' + username, password);
+        return { success: true, msg: '用户添加成功' };
     }
 };
 
