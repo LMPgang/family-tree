@@ -2,8 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=0.3, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=0.1, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
     <title>关于我们 - 家族族谱网站</title>
+    <script>
+        (function() {
+            var screenWidth = window.screen.width;
+            if (screenWidth < 1200) {
+                var scale = screenWidth / 1200;
+                var vp = document.querySelector('meta[name="viewport"]');
+                vp.setAttribute('content', 'width=1200, initial-scale=' + scale + ', minimum-scale=0.1, maximum-scale=3, user-scalable=yes, shrink-to-fit=no');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="styles.css">
     <style>
         .about-hero {

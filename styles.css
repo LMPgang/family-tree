@@ -1,4 +1,4 @@
-/* 全局样式 - 固定宽度，禁止自适应 */
+/* 全局样式 - 固定宽度布局 */
 html {
     min-width: 1200px;
 }
@@ -23,7 +23,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     min-width: 1200px;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 
 /* 添加半透明遮罩层 - 加深遮罩使背景人物不明显 */
