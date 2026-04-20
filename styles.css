@@ -3,6 +3,17 @@ html {
     min-width: 1200px;
 }
 
+/* 移动端响应式覆盖 */
+@media (max-width: 768px) {
+    html {
+        min-width: auto;
+    }
+    body {
+        min-width: auto;
+        overflow-x: hidden;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
