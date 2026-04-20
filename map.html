@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=0.3, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=0.3, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
     <title>墓地地图 - 家族族谱网站</title>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -41,8 +41,8 @@
         .map-main { flex: 1; display: flex; flex-direction: column; gap: 15px; }
 
         /* 地图区域 */
-        .map-canvas-wrapper { flex: 1; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; min-height: 450px; overflow: hidden; }
-        .map-iframe { width: 100%; height: 100%; min-height: 430px; border: none; border-radius: 8px; }
+        .map-canvas-wrapper { flex: 1; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; height: 550px; overflow: hidden; }
+        .map-iframe { width: 100%; height: 530px; border: none; border-radius: 8px; display: block; }
 
         /* 详情面板 */
         .tomb-detail { background: rgba(255,248,220,0.92); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
@@ -93,18 +93,7 @@
         .tomb-modal .modal-btns .btn-cancel:hover { background: rgba(150,150,150,0.8); }
 
 
-        /* 移动端响应式 */
-        @media (max-width: 768px) {
-            .map-container { flex-direction: column; min-height: auto; }
-            .map-sidebar { width: 100%; max-height: none; }
-            .map-canvas-wrapper { min-height: 350px; }
-            .map-iframe { min-height: 300px; }
-            .tomb-detail-body { flex-direction: column; }
-            .tomb-detail-image { width: 100%; }
-            .tomb-detail-image img { height: 200px; }
-            .map-page h1 { font-size: 1.5rem; }
-            .map-page .subtitle { font-size: 0.85rem; margin-bottom: 15px; }
-        }
+
     </style>
 </head>
 <body>
