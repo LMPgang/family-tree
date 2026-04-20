@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=0.1, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
+    <meta name="viewport" content="width=1200, initial-scale=1, minimum-scale=0.3, maximum-scale=3, user-scalable=yes, shrink-to-fit=no">
     <title>墓地地图 - 家族族谱网站</title>
     <link rel="stylesheet" href="styles.css">
     <script>
-        // 手机端自动缩放：计算initial-scale使1200px宽的页面刚好适配屏幕宽度
+        // 手机端自动缩放：让页面初始就适配屏幕宽度
         (function() {
             var screenWidth = window.screen.width;
             if (screenWidth < 1200) {
                 var scale = screenWidth / 1200;
-                var viewport = document.querySelector('meta[name="viewport"]');
-                viewport.setAttribute('content', 'width=1200, initial-scale=' + scale + ', minimum-scale=0.1, maximum-scale=3, user-scalable=yes, shrink-to-fit=no');
+                var vp = document.querySelector('meta[name="viewport"]');
+                vp.setAttribute('content', 'width=1200, initial-scale=' + scale + ', minimum-scale=0.1, maximum-scale=3, user-scalable=yes, shrink-to-fit=no');
             }
         })();
     </script>
@@ -53,7 +53,7 @@
 
         /* 地图区域 */
         .map-canvas-wrapper { flex: 1; background: rgba(255,248,220,0.92); border-radius: 12px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; height: 550px; }
-        .map-iframe { width: 100%; height: 530px; border: none; border-radius: 8px; display: block; }
+        #mapContainer { width: 100%; height: 530px; border-radius: 8px; }
 
         /* 详情面板 */
         .tomb-detail { background: rgba(255,248,220,0.92); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
@@ -103,6 +103,48 @@
         .tomb-modal .modal-btns .btn-cancel { background: rgba(150,150,150,0.6); color: #333; }
         .tomb-modal .modal-btns .btn-cancel:hover { background: rgba(150,150,150,0.8); }
 
+        /* 地图标记动画 */
+        @keyframes markerPulse {
+            0% { box-shadow: 0 0 0 0 rgba(218,165,32,0.6); }
+            70% { box-shadow: 0 0 0 12px rgba(218,165,32,0); }
+            100% { box-shadow: 0 0 0 0 rgba(218,165,32,0); }
+        }
+
+        /* 自定义弹窗样式 */
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 2px solid #DAA520;
+        }
+        .custom-popup .leaflet-popup-tip {
+            border-top-color: #DAA520;
+        }
+
+        /* 显示全部标记按钮 */
+        .show-all-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 500;
+            padding: 8px 16px;
+            background: linear-gradient(135deg,#8B4513,#A0522D);
+            color: #FFF8DC;
+            border: 2px solid #DAA520;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'KaiTi','SimSun',serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        .show-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg,#A0522D,#CD853F);
+        }
+
+
 
 
     </style>
@@ -145,7 +187,8 @@
 
                 <div class="map-main">
                     <div class="map-canvas-wrapper">
-                        <iframe class="map-iframe" id="mapIframe" src="https://www.openstreetmap.org/export/embed.html?bbox=112.0%2C33.5%2C114.5%2C35.0&layer=mapnik"></iframe>
+                        <button class="show-all-btn" onclick="showAllTombs()" title="显示所有墓地标记">&#128506; 显示全部</button>
+                        <div id="mapContainer"></div>
                     </div>
 
                     <div class="tomb-detail" id="tombDetail">
@@ -251,7 +294,94 @@
 
     <script src="auth.js"></script>
     <script src="data.js"></script>
+    <!-- Leaflet地图库（免费，无需API Key） -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // 初始化Leaflet地图
+        var leafletMap = null;
+        var currentMarker = null;
+        var allMarkers = {};  // 存储所有墓地标记
+        var allMarkersLayer = null;  // 所有标记的图层组
+
+        // 自定义墓地图标
+        var tombIcon = L.divIcon({
+            className: 'custom-tomb-marker',
+            html: '<div style="background:linear-gradient(135deg,#8B4513,#A0522D);color:#FFF8DC;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,0.3);border:2px solid #DAA520;">墓</div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -18]
+        });
+
+        // 选中状态的图标
+        var tombIconActive = L.divIcon({
+            className: 'custom-tomb-marker-active',
+            html: '<div style="background:linear-gradient(135deg,#DAA520,#FFD700);color:#4a3728;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;box-shadow:0 4px 14px rgba(218,165,32,0.5);border:3px solid #8B4513;animation:markerPulse 1.5s infinite;">墓</div>',
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            popupAnchor: [0, -20]
+        });
+
+        function initLeafletMap() {
+            leafletMap = L.map('mapContainer', {
+                zoom: 8,
+                center: [34.0, 113.0],
+                zoomControl: true,
+                attributionControl: false
+            });
+            // 使用OpenStreetMap标准瓦片源（最稳定）
+            // 备选源：tile.openstreetmap.de / {s}.tile.openstreetmap.org
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                subdomains: 'abc'
+            }).addTo(leafletMap);
+
+            // 添加所有墓地标记到地图上
+            addAllTombMarkers();
+
+            // 确保地图填满容器
+            setTimeout(function() {
+                if (leafletMap) {
+                    leafletMap.invalidateSize();
+                    // 自动调整视野以显示所有标记
+                    fitMapToAllMarkers();
+                }
+            }, 300);
+        }
+
+        // 添加所有墓地标记
+        function addAllTombMarkers() {
+            allMarkersLayer = L.layerGroup().addTo(leafletMap);
+            deceasedMembers.forEach(function(member) {
+                if (member.tomb && member.tomb.lat && member.tomb.lng) {
+                    var marker = L.marker([member.tomb.lat, member.tomb.lng], { icon: tombIcon })
+                        .addTo(allMarkersLayer)
+                        .bindPopup(
+                            '<div style="font-family:KaiTi,SimSun,serif;min-width:150px;">' +
+                            '<div style="font-size:1.1rem;font-weight:bold;color:#8B4513;margin-bottom:4px;">' + member.name + '</div>' +
+                            '<div style="color:#A0522D;font-size:0.85rem;">第' + member.generation + '世 | ' + member.birthYear + ' - ' + member.deathYear + '</div>' +
+                            '<div style="color:#666;font-size:0.8rem;margin-top:4px;">' + member.tomb.address + '</div>' +
+                            '</div>',
+                            { className: 'custom-popup' }
+                        );
+                    marker.memberId = member.id;
+                    marker.on('click', function() {
+                        selectMember(member.id);
+                    });
+                    allMarkers[member.id] = marker;
+                }
+            });
+        }
+
+        // 自动调整地图视野以显示所有标记
+        function fitMapToAllMarkers() {
+            var markers = Object.values(allMarkers);
+            if (markers.length > 0) {
+                var group = L.featureGroup(markers);
+                leafletMap.fitBounds(group.getBounds().pad(0.15));
+            }
+        }
+
         // 加载自定义墓地数据
         function loadCustomTombData() {
             const customData = localStorage.getItem('familyTombData');
@@ -372,8 +502,8 @@
                 item.classList.toggle('active', parseInt(item.dataset.memberId) === memberId);
             });
 
-            // 更新地图iframe，定位到该墓地
-            updateMapLocation(member.tomb.lat, member.tomb.lng);
+            // 更新地图，定位到该墓地并高亮标记
+            updateMapLocation(member.tomb.lat, member.tomb.lng, memberId);
 
             // 更新详情
             document.getElementById('detailName').textContent = member.name;
@@ -399,11 +529,23 @@
         }
 
         // 更新地图位置
-        function updateMapLocation(lat, lng) {
-            const delta = 0.05;
-            const bbox = `${lng-delta}%2C${lat-delta}%2C${lng+delta}%2C${lat+delta}`;
-            const marker = `&marker=${lat}%2C${lng}`;
-            document.getElementById('mapIframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik${marker}`;
+        function updateMapLocation(lat, lng, memberId) {
+            if (!leafletMap) {
+                initLeafletMap();
+            }
+            leafletMap.invalidateSize();
+            leafletMap.setView([lat, lng], 14, { animate: true });
+
+            // 重置所有标记为普通图标
+            Object.keys(allMarkers).forEach(function(id) {
+                allMarkers[id].setIcon(tombIcon);
+            });
+
+            // 高亮选中标记
+            if (memberId && allMarkers[memberId]) {
+                allMarkers[memberId].setIcon(tombIconActive);
+                allMarkers[memberId].openPopup();
+            }
         }
 
         // 保存墓地数据到localStorage
@@ -576,9 +718,27 @@
             }
         }
 
+        // 显示全部墓地标记（缩放到包含所有标记的视野）
+        function showAllTombs() {
+            if (!leafletMap) {
+                initLeafletMap();
+                return;
+            }
+            // 重置所有标记为普通图标
+            Object.keys(allMarkers).forEach(function(id) {
+                allMarkers[id].setIcon(tombIcon);
+            });
+            fitMapToAllMarkers();
+        }
+
         // 初始化
         renderTombList();
         initAdminControls();
+
+        // DOM完全加载后初始化地图（确保容器尺寸正确）
+        window.addEventListener('load', function() {
+            initLeafletMap();
+        });
 
         // 点击模态框外部关闭
         document.getElementById('tombModalOverlay').addEventListener('click', function(e) {
