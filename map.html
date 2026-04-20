@@ -294,9 +294,40 @@
 
     <script src="auth.js"></script>
     <script src="data.js"></script>
-    <!-- Leaflet地图库（免费，无需API Key） -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet地图库 - 多CDN备选自动加载 -->
+    <script>
+    (function() {
+        var cdns = [
+            { css: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' },
+            { css: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css', js: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js' },
+            { css: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css', js: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js' }
+        ];
+        var index = 0;
+
+        function loadLeaflet() {
+            if (index >= cdns.length) {
+                document.getElementById('mapContainer').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#8B4513;font-family:KaiTi,SimSun,serif;"><div style="font-size:4rem;margin-bottom:15px;">🗺️</div><div style="font-size:1.3rem;font-weight:bold;margin-bottom:10px;">地图库加载失败</div><div style="font-size:0.95rem;color:#666;text-align:center;">请检查网络连接后刷新页面</div></div>';
+                return;
+            }
+            var cdn = cdns[index];
+            // 加载CSS
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cdn.css;
+            document.head.appendChild(link);
+            // 加载JS
+            var script = document.createElement('script');
+            script.src = cdn.js;
+            script.onload = function() { window._leafletLoaded = true; };
+            script.onerror = function() {
+                index++;
+                loadLeaflet();
+            };
+            document.head.appendChild(script);
+        }
+        loadLeaflet();
+    })();
+    </script>
     <script>
         // 初始化Leaflet地图
         var leafletMap = null;
@@ -304,37 +335,61 @@
         var allMarkers = {};  // 存储所有墓地标记
         var allMarkersLayer = null;  // 所有标记的图层组
 
-        // 自定义墓地图标
-        var tombIcon = L.divIcon({
-            className: 'custom-tomb-marker',
-            html: '<div style="background:linear-gradient(135deg,#8B4513,#A0522D);color:#FFF8DC;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,0.3);border:2px solid #DAA520;">墓</div>',
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-            popupAnchor: [0, -18]
-        });
+        // 自定义墓地图标（延迟创建，等Leaflet加载完成）
+        var tombIcon = null;
+        var tombIconActive = null;
 
-        // 选中状态的图标
-        var tombIconActive = L.divIcon({
-            className: 'custom-tomb-marker-active',
-            html: '<div style="background:linear-gradient(135deg,#DAA520,#FFD700);color:#4a3728;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;box-shadow:0 4px 14px rgba(218,165,32,0.5);border:3px solid #8B4513;animation:markerPulse 1.5s infinite;">墓</div>',
-            iconSize: [38, 38],
-            iconAnchor: [19, 19],
-            popupAnchor: [0, -20]
-        });
+        function createTombIcons() {
+            tombIcon = L.divIcon({
+                className: 'custom-tomb-marker',
+                html: '<div style="background:linear-gradient(135deg,#8B4513,#A0522D);color:#FFF8DC;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,0.3);border:2px solid #DAA520;">墓</div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                popupAnchor: [0, -18]
+            });
+            tombIconActive = L.divIcon({
+                className: 'custom-tomb-marker-active',
+                html: '<div style="background:linear-gradient(135deg,#DAA520,#FFD700);color:#4a3728;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;box-shadow:0 4px 14px rgba(218,165,32,0.5);border:3px solid #8B4513;animation:markerPulse 1.5s infinite;">墓</div>',
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+                popupAnchor: [0, -20]
+            });
+        }
+
+        // 地图瓦片源配置（按优先级排列，自动切换）
+        var tileProviders = [
+            {
+                name: '高德地图',
+                url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+                opts: { maxZoom: 18, subdomains: '123' }
+            },
+            {
+                name: 'OpenStreetMap',
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                opts: { maxZoom: 19, subdomains: 'abc' }
+            },
+            {
+                name: 'OSM德国镜像',
+                url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+                opts: { maxZoom: 18 }
+            }
+        ];
+
+        var currentTileLayer = null;
+        var tileErrorCount = {};
 
         function initLeafletMap() {
+            if (!window.L) return; // Leaflet未加载，不初始化
+            createTombIcons();
             leafletMap = L.map('mapContainer', {
                 zoom: 8,
                 center: [34.0, 113.0],
                 zoomControl: true,
                 attributionControl: false
             });
-            // 使用OpenStreetMap标准瓦片源（最稳定）
-            // 备选源：tile.openstreetmap.de / {s}.tile.openstreetmap.org
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                subdomains: 'abc'
-            }).addTo(leafletMap);
+
+            // 加载第一个瓦片源
+            loadTileProvider(0);
 
             // 添加所有墓地标记到地图上
             addAllTombMarkers();
@@ -347,6 +402,49 @@
                     fitMapToAllMarkers();
                 }
             }, 300);
+        }
+
+        // 加载指定瓦片源
+        function loadTileProvider(index) {
+            if (index >= tileProviders.length) {
+                // 所有瓦片源都失败了，显示提示
+                showMapError();
+                return;
+            }
+            var provider = tileProviders[index];
+            if (currentTileLayer) {
+                leafletMap.removeLayer(currentTileLayer);
+            }
+            currentTileLayer = L.tileLayer(provider.url, provider.opts);
+            currentTileLayer.providerIndex = index;
+
+            // 监听瓦片加载错误
+            currentTileLayer.on('tileerror', function(error) {
+                if (!tileErrorCount[index]) tileErrorCount[index] = 0;
+                tileErrorCount[index]++;
+                // 连续出错超过5次，自动切换到下一个源
+                if (tileErrorCount[index] > 5) {
+                    console.warn('瓦片源 [' + provider.name + '] 加载失败，切换到下一个...');
+                    loadTileProvider(index + 1);
+                }
+            });
+
+            currentTileLayer.on('load', function() {
+                tileErrorCount[index] = 0;
+            });
+
+            currentTileLayer.addTo(leafletMap);
+        }
+
+        // 地图加载失败提示
+        function showMapError() {
+            var container = document.getElementById('mapContainer');
+            container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#8B4513;font-family:KaiTi,SimSun,serif;">' +
+                '<div style="font-size:4rem;margin-bottom:15px;">🗺️</div>' +
+                '<div style="font-size:1.3rem;font-weight:bold;margin-bottom:10px;">地图加载失败</div>' +
+                '<div style="font-size:0.95rem;color:#666;text-align:center;line-height:1.8;">可能是网络原因导致地图瓦片无法加载<br>请检查网络连接后刷新页面重试<br>或使用电脑端访问</div>' +
+                '<button onclick="location.reload()" style="margin-top:15px;padding:8px 24px;background:linear-gradient(135deg,#8B4513,#A0522D);color:#FFF8DC;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">刷新重试</button>' +
+                '</div>';
         }
 
         // 添加所有墓地标记
@@ -531,6 +629,7 @@
         // 更新地图位置
         function updateMapLocation(lat, lng, memberId) {
             if (!leafletMap) {
+                if (!window.L) return; // Leaflet未加载完成，跳过
                 initLeafletMap();
             }
             leafletMap.invalidateSize();
@@ -731,13 +830,36 @@
             fitMapToAllMarkers();
         }
 
+        // 等待Leaflet库加载完成后初始化地图
+        function waitForLeaflet(callback) {
+            if (window.L) {
+                callback();
+            } else {
+                var checkInterval = setInterval(function() {
+                    if (window.L) {
+                        clearInterval(checkInterval);
+                        callback();
+                    }
+                }, 100);
+                // 10秒超时
+                setTimeout(function() {
+                    clearInterval(checkInterval);
+                    if (!window.L) {
+                        showMapError();
+                    }
+                }, 10000);
+            }
+        }
+
         // 初始化
         renderTombList();
         initAdminControls();
 
-        // DOM完全加载后初始化地图（确保容器尺寸正确）
+        // DOM完全加载后等待Leaflet库就绪再初始化地图
         window.addEventListener('load', function() {
-            initLeafletMap();
+            waitForLeaflet(function() {
+                initLeafletMap();
+            });
         });
 
         // 点击模态框外部关闭
